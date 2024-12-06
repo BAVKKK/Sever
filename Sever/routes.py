@@ -296,7 +296,7 @@ def get_reestr():
                 "NAME": memo.info,
                 "ID": memo.id,
                 "STATUS_ID": memo.status_id,
-                "DATE_OF_CREATION": memo.date_of_creation
+                "DATE_OF_CREATION": memo.date_of_creation.strftime("%Y-%m-%d")
                 }
             response.append(data) 
         
