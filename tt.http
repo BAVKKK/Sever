@@ -1,0 +1,104 @@
+####
+GET http://127.0.0.1:8000/form_memo?id=1
+Accept: application/application/json
+
+####
+POST http://127.0.0.1:8000/form_memo
+Accept: application/json
+Content-Type: application/json
+
+{
+  "CREATOR": {
+    "DEPARTMENT": "",
+    "ID": 2,
+    "NAME": "",
+    "PATRONYMIC": "",
+    "SURNAME": ""
+  },
+  "DATE_OF_APPOINTMENT": "2025-01-01",
+  "DATE_OF_CREATION": "",
+  "DESCRIPTION": [
+    {
+      "COEF": 0.0,
+      "CONTRACT": 0,
+      "COUNT": 5,
+      "DATE_OF_DELIVERY": "2024-12-31",
+      "ID": 0,
+      "NAME": "Картошка",
+      "POSITION": 1,
+      "STATUS_CODE": 1,
+      "STATUS_TEXT": "",
+      "UNIT_CODE": 3,
+      "UNIT_TEXT": ""
+    },
+    {
+      "COEF": 0.0,
+      "CONTRACT": 0,
+      "COUNT": 5,
+      "DATE_OF_DELIVERY": "2024-12-31",
+      "ID": 0,
+      "NAME": "Свёкла",
+      "POSITION": 1,
+      "STATUS_CODE": 1,
+      "STATUS_TEXT": "",
+      "UNIT_CODE": 3,
+      "UNIT_TEXT": ""
+    }
+  ],
+  "EXECUTOR": {
+    "DEPARTMENT": "",
+    "ID": 1,
+    "NAME": "",
+    "PATRONYMIC": "",
+    "SURNAME": ""
+  },
+  "ID_MEMO": 0,
+  "INFO": "Тестовая заявка",
+  "STATUS_CODE": 1,
+  "STATUS_TEXT": ""
+}
+
+
+####
+GET http://127.0.0.1:8000/get_selectors
+Accept: application/application/json
+
+####
+GET http://127.0.0.1:8000/form_memo?id=12
+Accept: application/application/json
+
+###
+POST http://127.0.0.1:8000/register
+Accept: application/json
+Content-Type: application/json
+
+{
+  "LOGIN": "test5",
+  "PASSWORD": "abcd1234",
+  "EMAIL": "test5@mail.ru",
+  "ROLE_ID": 5
+}
+
+###
+POST http://127.0.0.1:8000/login
+Accept: application/json
+Content-Type: application/json
+
+{
+  "LOGIN": "test2",
+  "PASSWORD": "abcd1234"
+}
+
+###e
+GET http://127.0.0.1:8000/get_user_info
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczMzA2NTQwOSwianRpIjoiMTY3ZDE4NjYtMTVkMS00YWI3LTk0Y2QtMjZmMTRkMzI5YWE4IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QxIiwibmJmIjoxNzMzMDY1NDA5LCJjc3JmIjoiMzAyMzBjNGQtZWViOS00Mjk2LWFjNDgtNTBlYWIxOWJmYmRlIiwiZXhwIjoxNzMzMDcyNjA5LCJyb2xlX2lkIjoxLCJpZCI6MX0.iWcxQv8BUf2CHd1a7uo622n6KTzidBexBJAGlpOW7mo
+
+
+###
+GET http://127.0.0.1:8000/get_reestr
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczMzA2NTQwOSwianRpIjoiMTY3ZDE4NjYtMTVkMS00YWI3LTk0Y2QtMjZmMTRkMzI5YWE4IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QxIiwibmJmIjoxNzMzMDY1NDA5LCJjc3JmIjoiMzAyMzBjNGQtZWViOS00Mjk2LWFjNDgtNTBlYWIxOWJmYmRlIiwiZXhwIjoxNzMzMDcyNjA5LCJyb2xlX2lkIjoxLCJpZCI6MX0.iWcxQv8BUf2CHd1a7uo622n6KTzidBexBJAGlpOW7mo
+
+
+###
+GET http://127.0.0.1:8000/accept_memo?id=1&accept=1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczMzA2ODg4NSwianRpIjoiZTE1ZTIxYjItOWZhYy00MjhlLTgzN2MtNzFiNmRjYWZmNjkyIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QyIiwibmJmIjoxNzMzMDY4ODg1LCJjc3JmIjoiMzlkYjZlYWMtZGZkNS00NzlkLWI0NWQtMDMxNWFlMzBhMGU3IiwiZXhwIjoxNzMzMDc2MDg1LCJyb2xlX2lkIjoyLCJpZCI6M30.JjBMiLsb-9HH14xHu-GNydIymMC-KJ9YZWNHhvawAqs
