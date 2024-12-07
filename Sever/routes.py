@@ -218,36 +218,48 @@ def get_reestr():
         user_id = claims.get("id")
         role_id = claims.get("role_id")
 
-        # Получаем код статуса и фильтруем служебки по ним
+        # Получаем код статуса из запроса
         status_id = request.args.get("status")
         user = Employees.query.filter_by(id=user_id).first()
+        statuses = []
+        # Определяем базовый запрос
+        query = Memo.query
 
         # Определяем фильтрацию по ролям
         if role_id == 1:
             # Для роли "Руководитель отдела" (role_id == 1)
             department_id = user.department_id  # Получаем department_id руководителя
-            # Получаем заявки, где id_of_executor (сотрудник) принадлежит тому же department_id
-            if status_id:
-                memos = Memo.query.filter(Memo.id_of_creator.in_(
-                    db.session.query(Employees.id).filter_by(department_id=department_id)
-                )).all()
-            else:
-                memos = Memo.query.filter(Memo.id_of_creator.in_(
-                    db.session.query(Employees.id).filter_by(department_id=department_id)
-                )).all()
+            statuses = [1,2,3,4,5,6]
+            query = query.filter(Memo.id_of_creator.in_(
+                db.session.query(Employees.id).filter_by(department_id=department_id)
+            ))
         elif role_id in [2, 3]:  # Если пользователь из групп 2 или 3
             # Получаем все заявки из таблицы memo
-            memos = Memo.query.all()
+            statuses = [2,4,5,6]
+            pass  # Для всех заявок фильтры не применяются
         elif role_id == 4:  # Если пользователь из группы 4
             # Получаем заявки, где user.id либо в id_executor, либо в id_creator
-            memos = Memo.query.filter(
+            statuses = [1,2,3,4,5,6]
+            query = query.filter(
                 (Memo.id_of_executor == user_id) | (Memo.id_of_creator == user_id)
-            ).all()
+            )
         elif role_id == 5:  # Если пользователь из группы 5
             # Получаем только те заявки, где пользователь указан в id_executor
-            memos = Memo.query.filter(Memo.id_of_executor == user_id).all()
+            statuses = [2,4,5,6]
+            query = query.filter(Memo.id_of_executor == user_id)
         else:
             return jsonify({"msg": "Unauthorized role"}), 403
+
+        # Применяем фильтр по статусу, если передан
+        if status_id is not None:
+            if int(status_id) in statuses:
+                query = query.filter(Memo.status_id == status_id)
+            else:
+                msg = f"Incorrect status_id ({status_id}) for this role. Current role_id is {role_id}. Available statuses is {statuses}"
+                return jsonify({"STATUS": "Error", "message": msg}), 400
+
+        # Выполняем запрос
+        memos = query.all()
 
         # Формируем ответ с нужными данными
         response = []
@@ -257,8 +269,8 @@ def get_reestr():
                 "ID": memo.id,
                 "STATUS_ID": memo.status_id,
                 "DATE_OF_CREATION": memo.date_of_creation.strftime("%Y-%m-%d")
-                }
-            response.append(data) 
+            }
+            response.append(data)
         
         json_response = json.dumps(response, ensure_ascii=False, indent=4)
         return Response(json_response, content_type='application/json; charset=utf-8')
@@ -280,14 +292,14 @@ def accept_memo():
             status = request.args.get("accept")
 
             memo = Memo.query.filter_by(id = id_memo).first()
-            memo.status_id = 2 if status else 3
+            memo.status_id = 2 if status else 3 # 2 - Зарегистрировна, 3 - Отклонена нач. отдела
             add_commit(memo)
         elif role_id == 2:
             id_memo = request.args.get("id")
             status = request.args.get("accept")
 
             memo = Memo.query.filter_by(id = id_memo).first()
-            memo.status_id = 4 if status else 3
+            memo.status_id = 4 if status else 6 # 4 - Исполнение, 6 - Отклонена отделом закупок
             add_commit(memo)
         else:
             return jsonify({"msg": "Unauthorized role"}), 403
