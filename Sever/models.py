@@ -9,6 +9,7 @@ class Users(db.Model, UserMixin):
     login = db.Column(db.String(128), nullable=False, unique=True)
     hash_pwd = db.Column(db.String(), nullable=False)
     email = db.Column(db.String(128), unique=True)
+    phone = db.Column(db.String(32), unique=True)
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'), nullable=True)
 
 class Roles(db.Model):

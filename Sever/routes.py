@@ -113,9 +113,11 @@ def model_for_memo(id):
         description_list = []
         for desc in descriptions:
             executor_desc = Employees.query.filter_by(id=desc.id_of_executor).first() if desc.id_of_executor else None
+            exec_user = Users.query.filter_by(id=desc.id_of_executor).first() if desc.id_of_executor else None
             department = Department.query.filter_by(id=executor_desc.department_id).first() if executor_desc else None
             unit = Units.query.filter_by(id=desc.unit_id).first() if desc.unit_id else None
             status = StatusOfPurchase.query.filter_by(id=desc.status_id).first() if desc.status_id else None
+
             description_list.append({
                 "ID": desc.id,
                 "POSITION": desc.pos,
@@ -134,7 +136,9 @@ def model_for_memo(id):
                     "SURNAME": executor_desc.surname if executor_desc else "",
                     "NAME": executor_desc.name if executor_desc else "",
                     "PATRONYMIC": executor_desc.patronymic if executor_desc else "",
-                    "DEPARTMENT": department.name if department else ""
+                    "DEPARTMENT": department.name if department else "",
+                    "PHONE": exec_user.phone if exec_user else "",
+                    "EMAIL": exec_user.email if exec_user else ""
                 }
             })
         
@@ -167,57 +171,6 @@ def model_for_memo(id):
         }
         json_response = json.dumps(data, ensure_ascii=False, indent=4)
         return Response(json_response, content_type='application/json; charset=utf-8')
-    except Exception as ex:
-        return jsonify({"STATUS": "Error", "message": str(ex)}), 500
-
-
-def model_for_memo_0(id):
-    try:
-        data = {
-            "ID_MEMO": 0,       
-            "DATE_OF_CREATION": "",
-            "DATE_OF_APPOINTMENT": "",
-            "STATUS_CODE": 0,
-            "STATUS_TEXT": "",
-            "INFO": "",
-            "CREATOR": {
-                "ID": 0,
-                "SURNAME": "",
-                "NAME": "",
-                "PATRONYMIC": "",
-                "DEPARTMENT": ""
-            },
-            "EXECUTOR": {
-                "ID": 0,
-                "SURNAME": "",
-                "NAME": "",
-                "PATRONYMIC": "",
-                "DEPARTMENT": ""
-            },
-            "DESCRIPTION": [
-                {
-                    "ID": 0,
-                    "POSITION": 0,
-                    "NAME": "",
-                    "COUNT": 0,
-                    "UNIT_CODE": 0,
-                    "UNIT_TEXT": "",
-                    "STATUS_CODE": 0,
-                    "STATUS_TEXT": "",
-                    "COEF": 0.0,
-                    "CONTRACT": 0,
-                    "DATE_OF_DELIVERY": "",
-                    "EXECUTOR": {
-                        "ID": 0,
-                        "SURNAME": "",
-                        "NAME": "",
-                        "PATRONYMIC": "",
-                        "DEPARTMENT": ""
-                    }
-                }
-            ]
-        }
-        return data
     except Exception as ex:
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500
 
@@ -265,6 +218,8 @@ def get_reestr():
         user_id = claims.get("id")
         role_id = claims.get("role_id")
 
+        # Получаем код статуса и фильтруем служебки по ним
+        status_id = request.args.get("status")
         user = Employees.query.filter_by(id=user_id).first()
 
         # Определяем фильтрацию по ролям
@@ -272,9 +227,14 @@ def get_reestr():
             # Для роли "Руководитель отдела" (role_id == 1)
             department_id = user.department_id  # Получаем department_id руководителя
             # Получаем заявки, где id_of_executor (сотрудник) принадлежит тому же department_id
-            memos = Memo.query.filter(Memo.id_of_creator.in_(
-                db.session.query(Employees.id).filter_by(department_id=department_id)
-            )).all()
+            if status_id:
+                memos = Memo.query.filter(Memo.id_of_creator.in_(
+                    db.session.query(Employees.id).filter_by(department_id=department_id)
+                )).all()
+            else:
+                memos = Memo.query.filter(Memo.id_of_creator.in_(
+                    db.session.query(Employees.id).filter_by(department_id=department_id)
+                )).all()
         elif role_id in [2, 3]:  # Если пользователь из групп 2 или 3
             # Получаем все заявки из таблицы memo
             memos = Memo.query.all()
@@ -396,7 +356,11 @@ def login():
         }
         expires = timedelta(hours=2) 
         access_token = create_access_token(identity=login, additional_claims=additional_claims, expires_delta=expires)
-        return jsonify(access_token=access_token), 200
+        response = {
+            "access_token": access_token,
+            "ROLE": user.role_id 
+        }
+        return jsonify(response), 200
     else:
         return jsonify({"msg": "Invalid login or password"}), 401
     
@@ -421,7 +385,8 @@ def register():
         new_user = Users(login=login,
                          hash_pwd=hashed_password,
                          email = data["EMAIL"],
-                         role_id = data["ROLE_ID"])
+                         role_id = data["ROLE_ID"],
+                         phone = data["PHONE"])
         add_commit(new_user)
 
         return jsonify({"msg": "User registered successfully"}), 201

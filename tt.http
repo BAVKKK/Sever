@@ -1,5 +1,5 @@
 ####
-GET http://127.0.0.1:8000/form_memo?id=1
+GET http://127.0.0.1:8000/form_memo?id=5
 Accept: application/application/json
 
 ####
@@ -73,10 +73,11 @@ Accept: application/json
 Content-Type: application/json
 
 {
-  "LOGIN": "test5",
+  "LOGIN": "test52",
   "PASSWORD": "abcd1234",
-  "EMAIL": "test5@mail.ru",
-  "ROLE_ID": 5
+  "EMAIL": "test52@mail.ru",
+  "ROLE_ID": 5,
+  "PHONE": "+7987-564-32-17"
 }
 
 ###
