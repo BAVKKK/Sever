@@ -96,7 +96,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsI
 
 
 ###
-GET http://127.0.0.1:8000/get_reestr?status=4
+GET http://127.0.0.1:8000/get_reestr?status=2&filters={"INFO": "Проверка"}
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczMzY2NzI1NiwianRpIjoiZDVlODM3NzAtMzNhZS00Yzg2LWI1ZTQtNmExYTY1NmZjNDdhIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QyIiwibmJmIjoxNzMzNjY3MjU2LCJjc3JmIjoiYWZiMzE4ZGUtZDg1NS00MTc1LWE4MDAtYWYzMDU3OTZjNmVkIiwiZXhwIjoxNzMzNjc0NDU2LCJyb2xlX2lkIjoyLCJpZCI6N30.-renOvQR7gslf6pGQCQ0qXojOZQDrXMF0OqZtHD5Zo8
 
 ###

@@ -281,6 +281,9 @@ def get_reestr():
             else:
                 msg = f"Incorrect status_id ({status_id}) for this role. Current role_id is {role_id}. Available statuses is {statuses}"
                 return jsonify({"STATUS": "Error", "message": msg}), 400
+        else:
+            query = query.filter(Memo.status_id.in_(statuses))
+
 
         # Применяем фильтры, если они переданы
         if filters:
