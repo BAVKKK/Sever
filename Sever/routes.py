@@ -292,15 +292,17 @@ def get_reestr():
         # Выполняем запрос
         memos = query.all()
 
-        department = Department.query.filter_by(id=user.department_id).first() 
+        
         # Формируем ответ с нужными данными
         response = []
         for memo in memos:
+            creator_id = memo.id_of_creator
+            department = Department.query.filter_by(id=creator_id).first()
             data = {
                 "NAME": memo.info,
                 "ID": memo.id,
                 "STATUS_ID": memo.status_id,
-                "CREATOR_DEPARTMENT": department.name,
+                "CREATOR_DEPARTMENT": department.name if department else "",
                 "DATE_OF_CREATION": memo.date_of_creation.strftime("%Y-%m-%d")
             }
             response.append(data)

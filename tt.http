@@ -86,7 +86,7 @@ Accept: application/json
 Content-Type: application/json
 
 {
-  "LOGIN": "test51",
+  "LOGIN": "test2",
   "PASSWORD": "abcd1234"
 }
 
@@ -97,7 +97,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsI
 
 ###
 GET http://127.0.0.1:8000/get_reestr
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczMzY5MTU4MCwianRpIjoiNTFmZDM5ODUtYWEzNS00NmY3LWJkMGYtZmM2Yzg5YTRmMTQ4IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3Q1MSIsIm5iZiI6MTczMzY5MTU4MCwiY3NyZiI6IjIyNjY5ZDc2LTgwM2YtNGNlNS1hOTAwLTA4MTMwYWFlNDU0YyIsImV4cCI6MTczMzY5ODc4MCwicm9sZV9pZCI6NSwiaWQiOjExfQ.gDgfKKMWHQQHh9AJIL8fP4PlyK0Cj2ta_i4jm-glsyw
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczMzY5MjE5MiwianRpIjoiNjYwMjE1N2QtZGZhMC00NDM5LWIzZWItMzgyNTQzN2U1ODFlIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QyIiwibmJmIjoxNzMzNjkyMTkyLCJjc3JmIjoiZThhZjM2ZjgtMzAyOS00ZTNiLWFmZDktYTU4ZDBjMWRmNGMxIiwiZXhwIjoxNzMzNjk5MzkyLCJyb2xlX2lkIjoyLCJpZCI6N30.pum5rB2LouEiY7yhsaxmJw1gKwyk58ZDe79s8IKI_5A
 
 ###
 GET http://127.0.0.1:8000/accept_memo?id=1&accept=1
