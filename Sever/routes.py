@@ -2,7 +2,7 @@ from flask import render_template, redirect, url_for, request, flash, session, c
 from werkzeug.security import check_password_hash, generate_password_hash
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from flask_jwt_extended import get_jwt
-from sqlalchemy import text
+from sqlalchemy import text, func
 from collections import namedtuple
 import requests
 import json
@@ -292,6 +292,7 @@ def get_reestr():
         # Выполняем запрос
         memos = query.all()
 
+        department = Department.query.filter_by(id=user.department_id).first() 
         # Формируем ответ с нужными данными
         response = []
         for memo in memos:
@@ -299,6 +300,7 @@ def get_reestr():
                 "NAME": memo.info,
                 "ID": memo.id,
                 "STATUS_ID": memo.status_id,
+                "CREATOR_DEPARTMENT": department.name,
                 "DATE_OF_CREATION": memo.date_of_creation.strftime("%Y-%m-%d")
             }
             response.append(data)
@@ -523,3 +525,87 @@ def test():
     c = "0005"
     return 0
     
+#===================================================================================#
+#--------------------------------РАБОТА С СОДЕРЖАНИЕМ-------------------------------#
+#===================================================================================#
+
+@app.route('/set_sop', methods=['POST'])
+def set_sop():
+    try:
+        id = request.args.get("id")
+        if id:
+            desc = Description.query.filter_by(id = id).first()
+            print(desc)
+            desc.status_id += 1
+            add_commit(desc)
+            return jsonify({"STATUS": "Ok", "message": f"{id} status of purchase changed successfully"}), 200
+        else:
+            return jsonify({"STATUS": "Error", "message": "The \'id\' argument is not set"}), 400
+    except Exception as ex:
+        return jsonify({"STATUS": "Error", "message": str(ex)}), 500
+    
+@app.route('/get_aggregate', methods=['GET'])
+@jwt_required()
+def aggregate_description_data():
+    try:
+        # Получение данных пользователя из токена
+        claims = get_jwt()  # Получение дополнительных данных из токена
+        role_id = claims.get("role_id")
+        user_id = claims.get("id")
+
+        # Получение параметра status из запроса
+        status = request.args.get("status")
+
+        # Определяем базовый запрос
+        query = db.session.query(
+            Description.name,
+            func.sum(Description.count).label('total_count'),
+            Units.short_name.label('short_name'),
+            Units.full_name.label('full_name')
+        ).join(
+            Units, Description.unit_id == Units.id
+        )
+
+        # Применяем фильтр по status_id, если параметр status передан
+        if status is not None:
+            count = db.session.query(func.count(StatusOfPurchase.id)).scalar()
+            if int(status) > 0 and int(status) <= count:
+                query = query.filter(Description.status_id == status)
+            else:
+                return jsonify({"STATUS": "Error", "message": "Unknown status"}), 400
+
+        # Группируем данные
+        query = query.group_by(
+            Description.name,
+            Units.short_name,
+            Units.full_name
+        )
+
+        # Фильтрация данных в зависимости от роли
+        if role_id == 2:
+            # Роль 2 видит всю агрегацию
+            pass
+        elif role_id == 5:
+            # Роль 5 видит только те записи, где он указан в id_of_executor
+            query = query.filter(Description.id_of_executor == user_id)
+        else:
+            return jsonify({"STATUS": "Error", "message": "Unauthorized role"}), 403
+
+        # Выполняем запрос
+        aggregated_data = query.all()
+
+        # Преобразуем результат в список словарей
+        result = [
+            {
+                "NAME": row.name,
+                "TOTAL_COUNT": row.total_count,
+                "SHORT_NAME": row.short_name,
+                "FULL_NAME": row.full_name
+            }
+            for row in aggregated_data
+        ]
+
+        json_response = json.dumps(result, ensure_ascii=False, indent=4)
+        return Response(json_response, content_type='application/json; charset=utf-8')
+    except Exception as ex:
+        return jsonify({"STATUS": "Error", "message": str(ex)}), 500

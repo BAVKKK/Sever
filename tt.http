@@ -86,7 +86,7 @@ Accept: application/json
 Content-Type: application/json
 
 {
-  "LOGIN": "test2",
+  "LOGIN": "test51",
   "PASSWORD": "abcd1234"
 }
 
@@ -96,8 +96,8 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsI
 
 
 ###
-GET http://127.0.0.1:8000/get_reestr?status=2&filters={"INFO": "Проверка"}
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczMzY2NzI1NiwianRpIjoiZDVlODM3NzAtMzNhZS00Yzg2LWI1ZTQtNmExYTY1NmZjNDdhIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QyIiwibmJmIjoxNzMzNjY3MjU2LCJjc3JmIjoiYWZiMzE4ZGUtZDg1NS00MTc1LWE4MDAtYWYzMDU3OTZjNmVkIiwiZXhwIjoxNzMzNjc0NDU2LCJyb2xlX2lkIjoyLCJpZCI6N30.-renOvQR7gslf6pGQCQ0qXojOZQDrXMF0OqZtHD5Zo8
+GET http://127.0.0.1:8000/get_reestr
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczMzY5MTU4MCwianRpIjoiNTFmZDM5ODUtYWEzNS00NmY3LWJkMGYtZmM2Yzg5YTRmMTQ4IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3Q1MSIsIm5iZiI6MTczMzY5MTU4MCwiY3NyZiI6IjIyNjY5ZDc2LTgwM2YtNGNlNS1hOTAwLTA4MTMwYWFlNDU0YyIsImV4cCI6MTczMzY5ODc4MCwicm9sZV9pZCI6NSwiaWQiOjExfQ.gDgfKKMWHQQHh9AJIL8fP4PlyK0Cj2ta_i4jm-glsyw
 
 ###
 GET http://127.0.0.1:8000/accept_memo?id=1&accept=1
@@ -107,3 +107,14 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsI
 ###
 GET http://127.0.0.1:8000/search_memo?filters={"ITEM_NAME": "Ка"}
 Accept: application/application/json
+
+
+###
+POST http://127.0.0.1:8000/set_sop?id=46
+Accept: application/json
+Content-Type: application/json
+
+###
+GET http://127.0.0.1:8000/get_aggregate
+Accept: application/application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczMzY3NTU1OCwianRpIjoiYjdlYmM0OTQtODc2Yi00NThiLTlkOGUtZjI2MTc4MjI5M2I3IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3Q1MSIsIm5iZiI6MTczMzY3NTU1OCwiY3NyZiI6IjAyNTYyN2VkLTA5M2UtNDMyMC1hNTMwLWFmYzAwOTMyMmJhNCIsImV4cCI6MTczMzY4Mjc1OCwicm9sZV9pZCI6NSwiaWQiOjExfQ.4WuOxTm1GpDYnKPVTne_OGU7G5ijIpJzmJZOVfyFwFM
