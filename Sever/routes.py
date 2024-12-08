@@ -107,6 +107,7 @@ def model_for_memo(id):
             return jsonify({"STATUS": "Error", "message": f"Memo with ID {id} not found"}), 404
 
         creator = Employees.query.filter_by(id=memo.id_of_creator).first()
+        creator_user = Users.query.filter_by(id=memo.id_of_creator).first()
         executor = Employees.query.filter_by(id=memo.id_of_executor).first() if memo.id_of_executor else None
 
         descriptions = Description.query.filter_by(memo_id=id).all()
@@ -158,7 +159,9 @@ def model_for_memo(id):
                 "SURNAME": creator.surname,
                 "NAME": creator.name,
                 "PATRONYMIC": creator.patronymic,
-                "DEPARTMENT": department_creator.name if department_creator else ""
+                "DEPARTMENT": department_creator.name if department_creator else "",
+                "PHONE": creator_user.phone if creator_user else "",
+                "EMAIL": creator_user.email if creator_user else ""
             },
             "EXECUTOR": {
                 "ID": executor.id if executor else 0,
@@ -206,6 +209,21 @@ def form():
 #-----------------------------------РЕЕСТР------------------------------------------#
 #===================================================================================#
 
+def apply_filters(query, filters):
+    try:
+        if 'DESCRIPTION' in filters:
+            filt = filters["DESCRIPTION"]
+            query = query.filter(Memo.description.ilike(f"%{filt}%"))
+        elif 'INFO' in filters:
+            filt = filters["INFO"]
+            query = query.filter(Memo.info.ilike(f"%{filt}%"))
+        elif 'ITEM_NAME' in filters:
+            filt = filters["ITEM_NAME"]
+            query = query.join(Description).filter(Description.name.ilike(f"%{filt}%"))
+        return query
+    except Exception as ex:
+        return jsonify({"STATUS": "Error", "message": str(ex)}), 500
+
 @app.route('/get_reestr', methods=['GET'])
 @jwt_required()
 def get_reestr():
@@ -220,6 +238,12 @@ def get_reestr():
 
         # Получаем код статуса из запроса
         status_id = request.args.get("status")
+
+        # Получаем фильтры из запроса
+        filters = request.args.get("filters")
+        if filters:
+            filters = json.loads(filters)
+
         user = Employees.query.filter_by(id=user_id).first()
         statuses = []
         # Определяем базовый запрос
@@ -229,23 +253,23 @@ def get_reestr():
         if role_id == 1:
             # Для роли "Руководитель отдела" (role_id == 1)
             department_id = user.department_id  # Получаем department_id руководителя
-            statuses = [1,2,3,4,5,6]
+            statuses = [1, 2, 3, 4, 5, 6]
             query = query.filter(Memo.id_of_creator.in_(
                 db.session.query(Employees.id).filter_by(department_id=department_id)
             ))
         elif role_id in [2, 3]:  # Если пользователь из групп 2 или 3
             # Получаем все заявки из таблицы memo
-            statuses = [2,4,5,6]
+            statuses = [2, 4, 5, 6]
             pass  # Для всех заявок фильтры не применяются
         elif role_id == 4:  # Если пользователь из группы 4
             # Получаем заявки, где user.id либо в id_executor, либо в id_creator
-            statuses = [1,2,3,4,5,6]
+            statuses = [1, 2, 3, 4, 5, 6]
             query = query.filter(
                 (Memo.id_of_executor == user_id) | (Memo.id_of_creator == user_id)
             )
         elif role_id == 5:  # Если пользователь из группы 5
             # Получаем только те заявки, где пользователь указан в id_executor
-            statuses = [2,4,5,6]
+            statuses = [2, 4, 5, 6]
             query = query.filter(Memo.id_of_executor == user_id)
         else:
             return jsonify({"msg": "Unauthorized role"}), 403
@@ -257,6 +281,10 @@ def get_reestr():
             else:
                 msg = f"Incorrect status_id ({status_id}) for this role. Current role_id is {role_id}. Available statuses is {statuses}"
                 return jsonify({"STATUS": "Error", "message": msg}), 400
+
+        # Применяем фильтры, если они переданы
+        if filters:
+            query = apply_filters(query, filters)
 
         # Выполняем запрос
         memos = query.all()
@@ -271,13 +299,12 @@ def get_reestr():
                 "DATE_OF_CREATION": memo.date_of_creation.strftime("%Y-%m-%d")
             }
             response.append(data)
-        
+
         json_response = json.dumps(response, ensure_ascii=False, indent=4)
         return Response(json_response, content_type='application/json; charset=utf-8')
-        
+
     except Exception as ex:
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500
-
 
 @app.route('/accept_memo', methods=['GET'])
 @jwt_required()
@@ -485,3 +512,11 @@ def get_selectors():
             
     except Exception as ex:
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500
+    
+@app.route('/test', methods=['GET'])
+def test():
+    a = "5"
+    b = "05"
+    c = "0005"
+    return 0
+    
