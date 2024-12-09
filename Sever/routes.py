@@ -67,7 +67,7 @@ def add_description(memo_id, data):
         print(ex)
         return jsonify({"STATUS": "Error", "message": str(ex)}), 400
 
-
+@log_request
 def add_memo(data):
     """
     Метод для добавления служебной записки
@@ -92,10 +92,13 @@ def add_memo(data):
         memo.status_id = data["STATUS_CODE"]
         add_commit(memo)
         err = add_description(memo.id, data["DESCRIPTION"])
+        current_app.logger.info({"STATUS": "Success", "ID": memo.id})
         return jsonify({"STATUS": "Success", "ID": memo.id}), 200
 
     except Exception as ex:
+        current_app.logger.info(ex)
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500
+        
     
 def model_for_memo(id):
     """
@@ -209,7 +212,7 @@ def form():
 #-----------------------------------РЕЕСТР------------------------------------------#
 #===================================================================================#
 
-def apply_filters(query, filters):
+def apply_reestr_filters(query, filters):
     try:
         if 'DESCRIPTION' in filters:
             filt = filters["DESCRIPTION"]
@@ -287,7 +290,7 @@ def get_reestr():
 
         # Применяем фильтры, если они переданы
         if filters:
-            query = apply_filters(query, filters)
+            query = apply_reestr_filters(query, filters)
 
         # Выполняем запрос
         memos = query.all()
@@ -297,11 +300,13 @@ def get_reestr():
         response = []
         for memo in memos:
             creator_id = memo.id_of_creator
-            department = Department.query.filter_by(id=creator_id).first()
+            creator = Employees.query.filter_by(id=creator_id).first()
+            department = Department.query.filter_by(id=creator.department_id).first()
             data = {
                 "NAME": memo.info,
                 "ID": memo.id,
                 "STATUS_ID": memo.status_id,
+                "STATUS_TEXT": StatusOfExecution.query.filter_by(id=memo.status_id).first().name,
                 "CREATOR_DEPARTMENT": department.name if department else "",
                 "DATE_OF_CREATION": memo.date_of_creation.strftime("%Y-%m-%d")
             }
@@ -346,6 +351,65 @@ def accept_memo():
 #===================================================================================#
 #------------------------------ПОЛЬЗОВАТЕЛЬСКИЕ ДАННЫЕ------------------------------#
 #===================================================================================#
+def apply_users_filters(query, filters):
+    try:
+        if 'FIO' in filters:
+            filt = filters["FIO"]
+            full_name_expression = func.concat(Employees.surname, ' ', Employees.name, ' ', Employees.patronymic)
+            query = query.filter(full_name_expression.ilike(f'%{filt}%'))
+        if 'ROLE' in filters:
+            filt = filters["ROLE"]
+            query = query.filter(Users.role_id == filt)
+        return query
+    except Exception as ex:
+        print(ex)
+        return jsonify({"STATUS": "Error", "message": str(ex)}), 500
+
+@app.route('/get_users', methods=['GET'])
+@jwt_required()
+def get_users_info():
+    try:
+        filters = request.args.get("filters")
+          
+        query = db.session.query(Employees, Users).outerjoin(
+            Users, Employees.id == Users.id
+        )
+        if filters:
+            filters = json.loads(filters)
+            query = apply_users_filters(query, filters)
+        employees = query.order_by(Employees.department_id).all()
+        departments = Department.query.order_by(Department.id).all()
+        response = {}
+        added_users = set()  # Множество для отслеживания уже добавленных пользователей
+
+        for dep in departments:
+            response[dep.id] = {"NAME": dep.name,
+                                "EMPLOYEES": []}
+            for emp, user in employees:
+                if emp.id not in added_users:
+                    if dep.id == emp.department_id:
+                        data = {
+                            "ID": emp.id,
+                            "SURNAME": emp.surname,
+                            "NAME": emp.name,
+                            "PATRONYMIC": emp.patronymic,
+                            "POST": emp.post,
+                            "PHONE": user.phone if user else "",
+                            "EMAIL": user.email if user else ""
+                        }
+                        response[dep.id]["EMPLOYEES"].append(data)
+                        added_users.add(emp.id)  # Добавляем пользователя в множество
+                    elif dep.id != emp.department_id:
+                        break
+                else:
+                    pass
+        # Фильтруем отделы, в которых нет сотрудников
+        filtered_response = {dep_id: dep_data for dep_id, dep_data in response.items() if dep_data["EMPLOYEES"]}
+        json_response = json.dumps(filtered_response, ensure_ascii=False, indent=4)
+        return Response(json_response, content_type='application/json; charset=utf-8')
+        
+    except Exception as ex:
+        return jsonify({"STATUS": "Error", "message": str(ex)}), 500
 
 @app.route('/get_user_info', methods=['GET'])
 @jwt_required()
@@ -360,6 +424,7 @@ def get_user_info():
         if user:
             dep = Department.query.filter_by(id = user.department_id).first()
             data = {
+                "ID": user.id,
                 "SURNAME": user.surname,
                 "NAME": user.name,
                 "PATRONYMIC": user.patronymic,
@@ -611,3 +676,43 @@ def aggregate_description_data():
         return Response(json_response, content_type='application/json; charset=utf-8')
     except Exception as ex:
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500
+
+
+
+@app.route('/count_executor', methods=['GET'])
+def count_all_executors():
+    # Подсчёт уникальных memo_id в таблице Memo
+    memo_counts = db.session.query(
+        Memo.id_of_executor,
+        func.count(func.distinct(Memo.id)).label('memo_count')
+    ).filter(Memo.id_of_executor != None).group_by(Memo.id_of_executor).subquery()
+
+    # Подсчёт уникальных memo_id в таблице Description
+    description_counts = db.session.query(
+        Description.id_of_executor,
+        func.count(func.distinct(Description.memo_id)).label('description_count')
+    ).filter(Description.id_of_executor != None).group_by(Description.id_of_executor).subquery()
+
+    # Объединение подсчётов с информацией о сотрудниках
+    combined_counts = db.session.query(
+        Employees.id.label("executor_id"),
+        Employees.name.label("name"),
+        Employees.surname.label("surname"),
+        Employees.patronymic.label("patronymic"),
+        (func.coalesce(memo_counts.c.memo_count, 0) + 
+         func.coalesce(description_counts.c.description_count, 0)).label("total_count")
+    ).outerjoin(memo_counts, Employees.id == memo_counts.c.id_of_executor) \
+     .outerjoin(description_counts, Employees.id == description_counts.c.id_of_executor) \
+     .all()
+
+    # Формирование результата
+    result = {
+        str(row["executor_id"]): {
+            "NAME": row["name"],
+            "SURNAME": row["surname"],
+            "PATRONYMIC": row["patronymic"],
+            "COUNT": row["total_count"]
+        } for row in combined_counts
+    }
+
+    return jsonify(result), 200
