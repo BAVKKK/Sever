@@ -8,54 +8,140 @@ Accept: application/json
 Content-Type: application/json
 
 {
-  "CREATOR": {
-    "DEPARTMENT": "",
-    "ID": 2,
-    "NAME": "",
-    "PATRONYMIC": "",
-    "SURNAME": ""
-  },
+  "ID_MEMO": 0,
+  "DATE_OF_CREATION": null,
   "DATE_OF_APPOINTMENT": "2025-01-01",
-  "DATE_OF_CREATION": "",
+  "STATUS_CODE": 0,
+  "STATUS_TEXT": null,
+  "INFO": "Очередной конфуз",
+  "JUSTIFICATION": "Обосновал",
+  "CREATOR": {
+    "ID": 2,
+    "SURNAME": null,
+    "NAME": null,
+    "PATRONYMIC": null,
+    "DEPARTMENT": null,
+    "PHONE": null,
+    "EMAIL": null
+  },
+  "EXECUTOR": {
+    "ID": null,
+    "SURNAME": null,
+    "NAME": null,
+    "PATRONYMIC": null,
+    "DEPARTMENT": null
+  },
   "DESCRIPTION": [
     {
-      "COEF": 0.0,
-      "CONTRACT": 0,
-      "COUNT": 5,
-      "DATE_OF_DELIVERY": "2024-12-31",
       "ID": 0,
-      "NAME": "Картошка",
       "POSITION": 1,
-      "STATUS_CODE": 1,
-      "STATUS_TEXT": "",
+      "NAME": "Свёкла",
+      "COUNT": 15,
       "UNIT_CODE": 3,
-      "UNIT_TEXT": ""
+      "UNIT_TEXT": null,
+      "STATUS_CODE": 1,
+      "STATUS_TEXT": null,
+      "COEF": null,
+      "CONTRACT": null,
+      "CONTRACT_INFO": null,
+      "DATE_OF_DELIVERY": null,
+      "EXECUTOR": null
     },
     {
-      "COEF": 0.0,
-      "CONTRACT": 0,
-      "COUNT": 5,
-      "DATE_OF_DELIVERY": "2024-12-31",
       "ID": 0,
-      "NAME": "Свёкла",
       "POSITION": 1,
-      "STATUS_CODE": 1,
-      "STATUS_TEXT": "",
+      "NAME": "Картошка",
+      "COUNT": 5,
       "UNIT_CODE": 3,
-      "UNIT_TEXT": ""
+      "UNIT_TEXT": "КГ",
+      "STATUS_CODE": 1,
+      "STATUS_TEXT": null,
+      "COEF": null,
+      "CONTRACT": null,
+      "CONTRACT_INFO": null,
+      "DATE_OF_DELIVERY": null,
+      "EXECUTOR": null
     }
-  ],
-  "EXECUTOR": {
-    "DEPARTMENT": "",
-    "ID": 1,
-    "NAME": "",
-    "PATRONYMIC": "",
-    "SURNAME": ""
-  },
-  "ID_MEMO": 0,
-  "INFO": "Тестовая заявка",
+  ]
+}
+
+####
+POST http://127.0.0.1:8000/form_memo
+Accept: application/json
+Content-Type: application/json
+
+{
+  "ID_MEMO": 15,
+  "DATE_OF_CREATION": "2024-12-09",
+  "DATE_OF_APPOINTMENT": "2025-01-01",
   "STATUS_CODE": 1,
-  "STATUS_TEXT": ""
+  "STATUS_TEXT": "Ожидание согласования",
+  "INFO": "Поиск ошибок",
+  "JUSTIFICATION": "Обосновал",
+  "CREATOR": {
+    "ID": 2,
+    "SURNAME": "Иванов",
+    "NAME": "Алексей",
+    "PATRONYMIC": "Сергеевич",
+    "DEPARTMENT": "Отдел разработки IT-продуктов",
+    "PHONE": "",
+    "EMAIL": ""
+  },
+  "EXECUTOR": {
+    "ID": 7,
+    "SURNAME": "Федорова",
+    "NAME": "Анна",
+    "PATRONYMIC": "Сергеевна",
+    "DEPARTMENT": "Отдел 13"
+  },
+  "DESCRIPTION": [
+    {
+      "ID": 54,
+      "POSITION": 1,
+      "NAME": "Свёкла",
+      "COUNT": 15,
+      "UNIT_CODE": 3,
+      "UNIT_TEXT": "КГ",
+      "STATUS_CODE": 1,
+      "STATUS_TEXT": "Запрос ТКП",
+      "COEF": 0.1,
+      "CONTRACT": null,
+      "CONTRACT_INFO": "",
+      "DATE_OF_DELIVERY": "",
+      "EXECUTOR": {
+        "ID": 5,
+        "SURNAME": "",
+        "NAME": "",
+        "PATRONYMIC": "",
+        "DEPARTMENT": "",
+        "PHONE": "",
+        "EMAIL": ""
+      }
+    },
+    {
+      "ID": 55,
+      "POSITION": 1,
+      "NAME": "Картошка",
+      "COUNT": 5,
+      "UNIT_CODE": 3,
+      "UNIT_TEXT": "КГ",
+      "STATUS_CODE": 1,
+      "STATUS_TEXT": "Запрос ТКП",
+      "COEF": 0.1,
+      "CONTRACT": null,
+      "CONTRACT_INFO": "",
+      "DATE_OF_DELIVERY": "",
+      "EXECUTOR": {
+        "ID": 5,
+        "SURNAME": "",
+        "NAME": "",
+        "PATRONYMIC": "",
+        "DEPARTMENT": "",
+        "PHONE": "",
+        "EMAIL": ""
+      }
+    }
+  ]
 }
 
 
@@ -64,7 +150,7 @@ GET http://127.0.0.1:8000/get_selectors
 Accept: application/application/json
 
 ####
-GET http://127.0.0.1:8000/form_memo?id=12
+GET http://127.0.0.1:8000/form_memo?id=19
 Accept: application/application/json
 
 ###
@@ -86,7 +172,7 @@ Accept: application/json
 Content-Type: application/json
 
 {
-  "LOGIN": "test2",
+  "LOGIN": "test1",
   "PASSWORD": "abcd1234"
 }
 
@@ -97,7 +183,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsI
 
 ###
 GET http://127.0.0.1:8000/get_reestr
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczMzc0NTUzOSwianRpIjoiYWI3ZWFkMTUtMDVlMS00OWE4LThlMzAtOGU3OGMzZGE2ZDZhIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QyIiwibmJmIjoxNzMzNzQ1NTM5LCJjc3JmIjoiMDIyOGE5YWQtMmZjMy00YTYwLTk0MzItZDU1NTA5MTkwOWUxIiwiZXhwIjoxNzMzNzUyNzM5LCJyb2xlX2lkIjoyLCJpZCI6N30.Y59M4qruCpUXP7eCD-CaAAtye2Kuq1DsAX6aC5vLz_k
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczMzc4OTYxNSwianRpIjoiMjAxYTdkNjItZjg2MC00MDI3LWEyODQtYjJlNTdkOWU2OTY3IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QxIiwibmJmIjoxNzMzNzg5NjE1LCJjc3JmIjoiZDU0Y2RhZDItNTQxOS00MjUwLWI3NjItM2E3OGM2NjUwMmU3IiwiZXhwIjoxNzMzNzk2ODE1LCJyb2xlX2lkIjoxLCJpZCI6MX0._cctJZBgemkquF2Ll3csDgKYruZgkNR0G6Kqbe1Yjq8
 ###
 GET http://127.0.0.1:8000/accept_memo?id=1&accept=1
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczMzU3Mjk2MywianRpIjoiZjVhZWVjMjMtY2Q0NS00YWRiLWI0NmEtYTkxNjI0ZGY3YzczIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QyIiwibmJmIjoxNzMzNTcyOTYzLCJjc3JmIjoiMTgyNGU4ZWItZDgxYi00ODg5LWJiNzctYzFhNDY0M2U0N2VlIiwiZXhwIjoxNzMzNTgwMTYzLCJyb2xlX2lkIjoyLCJpZCI6N30.rNfZkiJtim6LZTZgq9W5BE0ImjsFufMEhiIvO11Ggrc

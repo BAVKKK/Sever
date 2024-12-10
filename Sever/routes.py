@@ -14,6 +14,10 @@ from datetime import timedelta
 from Sever import app, db
 from Sever.models import *
 
+
+# Подумать над костылем в add_memo
+
+
 def log_request(func):
     """
     Декоратор для логирования
@@ -41,11 +45,14 @@ def add_description(memo_id, data):
         # Добавляем новые записи
         for disc in data:
             date_of_delivery = None
+            executor_id = None
             if disc.get("DATE_OF_DELIVERY"):
                 try:
                     date_of_delivery = dt.strptime(disc["DATE_OF_DELIVERY"], "%Y-%m-%d").date()
                 except ValueError:
                     raise ValueError(f"Invalid date format: {disc['DATE_OF_DELIVERY']}")
+            if disc.get("EXECUTOR"):
+                executor_id = disc["EXECUTOR"]["ID"]
             
             new_disc = Description(
                 memo_id=memo_id,
@@ -55,7 +62,8 @@ def add_description(memo_id, data):
                 contract=disc.get("CONTRACT"),
                 unit_id=disc.get("UNIT_CODE"),
                 status_id=disc.get("STATUS_CODE"),
-                date_of_delivery=date_of_delivery
+                date_of_delivery=date_of_delivery,
+                id_of_executor = executor_id
             )
             db.session.add(new_disc)
         
@@ -64,8 +72,7 @@ def add_description(memo_id, data):
     
     except Exception as ex:
         db.session.rollback()
-        print(ex)
-        return jsonify({"STATUS": "Error", "message": str(ex)}), 400
+        return jsonify({"STATUS": "Error", "message": str(ex)}), 500
 
 @log_request
 def add_memo(data):
@@ -86,10 +93,13 @@ def add_memo(data):
         # Добавление или обновление данных в служебках
         date_of_appointment = dt.strptime(data["DATE_OF_APPOINTMENT"], "%Y-%m-%d").date() if data["DATE_OF_APPOINTMENT"] else None
         memo.info = data["INFO"]
-        memo.id_of_executor = data["EXECUTOR"]["ID"] if data["EXECUTOR"]["ID"] is not None and data["EXECUTOR"]["ID"] != 0 else None
+        # Пока не работает, т.к. всегда ответственный начальник второго отдела, а именно 7
+        #memo.id_of_executor = data["EXECUTOR"]["ID"] if data["EXECUTOR"]["ID"] is not None and data["EXECUTOR"]["ID"] != 0 else None
+        memo.id_of_executor = Users.query.filter_by(role_id = 2).first().id # Подставляем актуальное ID руководителя 13 отдела
         memo.date_of_appointment = date_of_appointment
 
-        memo.status_id = data["STATUS_CODE"]
+        memo.description = data["JUSTIFICATION"]
+        memo.status_id = data["STATUS_CODE"] if data["STATUS_CODE"] and data["STATUS_CODE"] != 0 else 1
         add_commit(memo)
         err = add_description(memo.id, data["DESCRIPTION"])
         current_app.logger.info({"STATUS": "Success", "ID": memo.id})
