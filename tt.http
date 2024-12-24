@@ -71,7 +71,7 @@ Accept: application/json
 Content-Type: application/json
 
 {
-  "ID_MEMO": 15,
+  "ID_MEMO": 0,
   "DATE_OF_CREATION": "2024-12-09",
   "DATE_OF_APPOINTMENT": "2025-01-01",
   "STATUS_CODE": 1,
@@ -79,7 +79,7 @@ Content-Type: application/json
   "INFO": "Поиск ошибок",
   "JUSTIFICATION": "Обосновал",
   "CREATOR": {
-    "ID": 2,
+    "ID": 1,
     "SURNAME": "Иванов",
     "NAME": "Алексей",
     "PATRONYMIC": "Сергеевич",
@@ -182,8 +182,8 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsI
 
 
 ###
-GET http://127.0.0.1:8000/get_reestr
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczMzc4OTYxNSwianRpIjoiMjAxYTdkNjItZjg2MC00MDI3LWEyODQtYjJlNTdkOWU2OTY3IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QxIiwibmJmIjoxNzMzNzg5NjE1LCJjc3JmIjoiZDU0Y2RhZDItNTQxOS00MjUwLWI3NjItM2E3OGM2NjUwMmU3IiwiZXhwIjoxNzMzNzk2ODE1LCJyb2xlX2lkIjoxLCJpZCI6MX0._cctJZBgemkquF2Ll3csDgKYruZgkNR0G6Kqbe1Yjq8
+GET http://127.0.0.1:8000/get_reestr?filters={"DESCRIPTION": "Об", "ITEM_NAME": "Св"}
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczNTA2NjAwOCwianRpIjoiOGU3YTliMTgtOWFmOC00NjMzLTk4YzItZDFlZWRkZDAxZjNjIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QxIiwibmJmIjoxNzM1MDY2MDA4LCJjc3JmIjoiYzFhM2U3YTAtOTEzMi00YjFlLThkZWItMDJmYzAwYzQxN2NkIiwiZXhwIjoxNzM1MDczMjA4LCJyb2xlX2lkIjoxLCJpZCI6MX0.rIIqW5FXEKxtiCFyWxLDHsfAshoQMU1jzfAwW2IiZv0
 ###
 GET http://127.0.0.1:8000/accept_memo?id=1&accept=1
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczMzU3Mjk2MywianRpIjoiZjVhZWVjMjMtY2Q0NS00YWRiLWI0NmEtYTkxNjI0ZGY3YzczIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QyIiwibmJmIjoxNzMzNTcyOTYzLCJjc3JmIjoiMTgyNGU4ZWItZDgxYi00ODg5LWJiNzctYzFhNDY0M2U0N2VlIiwiZXhwIjoxNzMzNTgwMTYzLCJyb2xlX2lkIjoyLCJpZCI6N30.rNfZkiJtim6LZTZgq9W5BE0ImjsFufMEhiIvO11Ggrc
@@ -200,9 +200,9 @@ Accept: application/json
 Content-Type: application/json
 
 ###
-GET http://127.0.0.1:8000/get_users?filters={}
+GET http://127.0.0.1:8000/get_users?filters={"ROLE": 5, "FIO": ""}
 Accept: application/application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczMzc3NjEyNiwianRpIjoiOGY0Y2Q0YTYtMDhiNi00NjhjLWIyYzItNGRkNDY3ODdmNmJiIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QyIiwibmJmIjoxNzMzNzc2MTI2LCJjc3JmIjoiZTYxYTY1OGUtMTNjNi00NzFmLWIyMDItY2FiMjNkOTgwZDlmIiwiZXhwIjoxNzMzNzgzMzI2LCJyb2xlX2lkIjoyLCJpZCI6N30.gw3dxBQTCv8luBnsnsxsV7G0X61rU9xntPsSBTQIkGI
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczMzc5MzI4OCwianRpIjoiMDVlZjM4MDAtMDRjZi00ZmVjLWExYzUtYWFmYjVhZTQ1ZGRjIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QxIiwibmJmIjoxNzMzNzkzMjg4LCJjc3JmIjoiMmY4ODY0NzYtZmMwNi00ZTkzLWI0MzktNmE4ODBiMDViOGZmIiwiZXhwIjoxNzMzODAwNDg4LCJyb2xlX2lkIjoxLCJpZCI6MX0.kLEieu07QNasJHYWRk5D9Qt-Wut3Jxd2FAG0Eg0qMgk
 
 ###
 GET http://127.0.0.1:8000/count_executor

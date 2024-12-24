@@ -107,6 +107,7 @@ def add_memo(data):
 
     except Exception as ex:
         current_app.logger.info(ex)
+        db.session.rollback()
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500
         
     
@@ -227,10 +228,10 @@ def apply_reestr_filters(query, filters):
         if 'DESCRIPTION' in filters:
             filt = filters["DESCRIPTION"]
             query = query.filter(Memo.description.ilike(f"%{filt}%"))
-        elif 'INFO' in filters:
+        if 'INFO' in filters:
             filt = filters["INFO"]
             query = query.filter(Memo.info.ilike(f"%{filt}%"))
-        elif 'ITEM_NAME' in filters:
+        if 'ITEM_NAME' in filters:
             filt = filters["ITEM_NAME"]
             query = query.join(Description).filter(Description.name.ilike(f"%{filt}%"))
         return query
