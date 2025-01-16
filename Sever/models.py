@@ -73,3 +73,10 @@ class Description(db.Model):
     contract_info = db.Column(db.String, nullable=True)
     date_of_delivery = db.Column(db.DateTime, nullable=True)
     id_of_executor = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=True)
+
+class HistoryOfchangingSOP(db.Model):
+    __tablename__ = 'history_of_changing_sop'
+    id = db.Column(db.Integer, primary_key=True)
+    date_of_setup = db.Column(db.DateTime, nullable=True)
+    description_id = db.Column(db.Integer, db.ForeignKey('description.id'), nullable=True)
+    setted_status_id = db.Column(db.Integer, db.ForeignKey('status_of_purchase.id'), nullable=True)

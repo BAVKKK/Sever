@@ -1,115 +1,23 @@
-from flask import render_template, redirect, url_for, request, flash, session, current_app, jsonify, Response
+from flask import render_template, redirect, url_for, request, flash, session, jsonify, Response
 from werkzeug.security import check_password_hash, generate_password_hash
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from flask_jwt_extended import get_jwt
-from sqlalchemy import text, func
+from sqlalchemy import text, func, or_
 from collections import namedtuple
 import requests
 import json
-import functools
 from datetime import datetime as dt
 from datetime import timedelta
 
 
-from Sever import app, db
+from Sever import app, db, log_request
 from Sever.models import *
+from Sever.selector import *
+from Sever.db_utils import *
 
-
+# Исправить add_description
 # Подумать над костылем в add_memo
 
-
-def log_request(func):
-    """
-    Декоратор для логирования
-    
-    """
-    @functools.wraps(func)
-    def decorated_function(*args, **kwargs):
-        current_app.logger.info('Request: %s %s', request.method, request.url)
-        return func(*args, **kwargs)
-    return decorated_function
-
-def add_commit(param):
-    """
-    Сокращение для SQLAlchemy
-    """
-    db.session.add(param)
-    db.session.commit()    
-
-def add_description(memo_id, data):
-    try:
-        # Удаляем все существующие записи к конкретной заявке
-        Description.query.filter_by(memo_id=memo_id).delete()
-        db.session.commit()
-        
-        # Добавляем новые записи
-        for disc in data:
-            date_of_delivery = None
-            executor_id = None
-            if disc.get("DATE_OF_DELIVERY"):
-                try:
-                    date_of_delivery = dt.strptime(disc["DATE_OF_DELIVERY"], "%Y-%m-%d").date()
-                except ValueError:
-                    raise ValueError(f"Invalid date format: {disc['DATE_OF_DELIVERY']}")
-            if disc.get("EXECUTOR"):
-                executor_id = disc["EXECUTOR"]["ID"]
-            
-            new_disc = Description(
-                memo_id=memo_id,
-                pos=disc.get("POSITION"),
-                name=disc.get("NAME"),
-                count=disc.get("COUNT", 0),
-                contract=disc.get("CONTRACT"),
-                unit_id=disc.get("UNIT_CODE"),
-                status_id=disc.get("STATUS_CODE"),
-                date_of_delivery=date_of_delivery,
-                id_of_executor = executor_id
-            )
-            db.session.add(new_disc)
-        
-        db.session.commit()
-        return jsonify({"STATUS": "Success", "message": "Descriptions added successfully"}), 200
-    
-    except Exception as ex:
-        db.session.rollback()
-        return jsonify({"STATUS": "Error", "message": str(ex)}), 500
-
-@log_request
-def add_memo(data):
-    """
-    Метод для добавления служебной записки
-    """
-    try:
-        if data["ID_MEMO"] == 0: # Создаем новую запись в таблицу служебок
-            memo = Memo(
-                date_of_creation = dt.now().date(),
-                info = data["INFO"],
-                id_of_creator = data["CREATOR"]["ID"]
-            )
-            add_commit(memo)
-        else:
-            memo = Memo.query.filter_by(id=data["ID_MEMO"]).first()
-
-        # Добавление или обновление данных в служебках
-        date_of_appointment = dt.strptime(data["DATE_OF_APPOINTMENT"], "%Y-%m-%d").date() if data["DATE_OF_APPOINTMENT"] else None
-        memo.info = data["INFO"]
-        # Пока не работает, т.к. всегда ответственный начальник второго отдела, а именно 7
-        #memo.id_of_executor = data["EXECUTOR"]["ID"] if data["EXECUTOR"]["ID"] is not None and data["EXECUTOR"]["ID"] != 0 else None
-        memo.id_of_executor = Users.query.filter_by(role_id = 2).first().id # Подставляем актуальное ID руководителя 13 отдела
-        memo.date_of_appointment = date_of_appointment
-
-        memo.description = data["JUSTIFICATION"]
-        memo.status_id = data["STATUS_CODE"] if data["STATUS_CODE"] and data["STATUS_CODE"] != 0 else 1
-        add_commit(memo)
-        err = add_description(memo.id, data["DESCRIPTION"])
-        current_app.logger.info({"STATUS": "Success", "ID": memo.id})
-        return jsonify({"STATUS": "Success", "ID": memo.id}), 200
-
-    except Exception as ex:
-        current_app.logger.info(ex)
-        db.session.rollback()
-        return jsonify({"STATUS": "Error", "message": str(ex)}), 500
-        
     
 def model_for_memo(id):
     """
@@ -127,11 +35,20 @@ def model_for_memo(id):
         descriptions = Description.query.filter_by(memo_id=id).all()
         description_list = []
         for desc in descriptions:
-            executor_desc = Employees.query.filter_by(id=desc.id_of_executor).first() if desc.id_of_executor else None
-            exec_user = Users.query.filter_by(id=desc.id_of_executor).first() if desc.id_of_executor else None
-            department = Department.query.filter_by(id=executor_desc.department_id).first() if executor_desc else None
-            unit = Units.query.filter_by(id=desc.unit_id).first() if desc.unit_id else None
-            status = StatusOfPurchase.query.filter_by(id=desc.status_id).first() if desc.status_id else None
+            executor_desc = Employees.query.filter_by(id = desc.id_of_executor).first() if desc.id_of_executor else None
+            exec_user = Users.query.filter_by(id = desc.id_of_executor).first() if desc.id_of_executor else None
+            department = Department.query.filter_by(id = executor_desc.department_id).first() if executor_desc else None
+            unit = Units.query.filter_by(id = desc.unit_id).first() if desc.unit_id else None
+            status = StatusOfPurchase.query.filter_by(id = desc.status_id).first() if desc.status_id else None
+
+            his = HistoryOfchangingSOP.query.filter_by(description_id = desc.id).all()
+            history = []
+            for hi in his:
+                tmp = {
+                    "STATUS_ID": hi.setted_status_id,
+                    "DATE": hi.date_of_setup.strftime("%Y-%m-%d")
+                }
+                history.append(tmp)
 
             description_list.append({
                 "ID": desc.id,
@@ -154,7 +71,8 @@ def model_for_memo(id):
                     "DEPARTMENT": department.name if department else "",
                     "PHONE": exec_user.phone if exec_user else "",
                     "EMAIL": exec_user.email if exec_user else ""
-                }
+                },
+                "HISTORY": history
             })
         
         status_memo = StatusOfExecution.query.filter_by(id = memo.status_id).first()
@@ -234,6 +152,16 @@ def apply_reestr_filters(query, filters):
         if 'ITEM_NAME' in filters:
             filt = filters["ITEM_NAME"]
             query = query.join(Description).filter(Description.name.ilike(f"%{filt}%"))
+        if 'EXECUTOR_NAME' in filters:
+            filt = filters["EXECUTOR_NAME"]
+            query = query.join(Description).join(Employees) \
+                         .filter(
+                             or_(
+                                 Employees.name.ilike(f"%{filt}%"),
+                                 Employees.surname.ilike(f"%{filt}%"),
+                                 Employees.patronymic.ilike(f"%{filt}%")
+                             )
+                         )
         return query
     except Exception as ex:
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500
@@ -298,14 +226,12 @@ def get_reestr():
         else:
             query = query.filter(Memo.status_id.in_(statuses))
 
-
         # Применяем фильтры, если они переданы
         if filters:
             query = apply_reestr_filters(query, filters)
 
         # Выполняем запрос
         memos = query.all()
-
         
         # Формируем ответ с нужными данными
         response = []
@@ -476,7 +402,7 @@ def login():
             "role_id": user.role_id,
             "id": user.id
         }
-        expires = timedelta(hours=2) 
+        expires = timedelta(hours=24) 
         access_token = create_access_token(identity=login, additional_claims=additional_claims, expires_delta=expires)
         response = {
             "access_token": access_token,
@@ -520,88 +446,13 @@ def register():
 #===================================================================================#
 #--------------------------------БЛОК С СЕЛЕКТОРАМИ---------------------------------#
 #===================================================================================#
-def get_units_list():
-    try:
-        responce = []
-        units = Units.query.all()
-        for unit in units:
-            data = {
-                "ID": unit.id,
-                "SHORT_NAME": unit.short_name,
-                "FULL_NAME": unit.full_name
-            }
-            responce.append(data)
-
-        return {"UNITS": responce}
-    except Exception as ex:
-        return jsonify({"STATUS": "Error", "message": str(ex)}), 500
-
-def get_departments_list():
-    try:
-        responce = []
-        departments = Department.query.all()
-        for department in departments:
-            data = {
-                "ID": department.id,
-                "NAME": department.name
-            }
-            responce.append(data)
-
-        return {"DEPARTMENTS": responce}
-    except Exception as ex:
-        return jsonify({"STATUS": "Error", "message": str(ex)}), 500
-
-def get_sop_list():
-    try:
-        responce = []
-        sops = StatusOfPurchase.query.all()
-        for sop in sops:
-            data = {
-                "ID": sop.id,
-                "NAME": sop.name,
-                "COEF": sop.coef
-            }
-            responce.append(data)
-
-        return {"STATUS_OF_PURCHASE": responce}
-    except Exception as ex:
-        return jsonify({"STATUS": "Error", "message": str(ex)}), 500
-
-def get_soe_list():
-    try:
-        responce = []
-        soes = StatusOfExecution.query.all()
-        for soe in soes:
-            data = {
-                "ID": soe.id,
-                "NAME": soe.name
-            }
-            responce.append(data)
-
-        return {"STATUS_OF_EXECUTION": responce}
-    except Exception as ex:
-        return jsonify({"STATUS": "Error", "message": str(ex)}), 500
 
 @app.route('/get_selectors', methods=['GET'])
 def get_selectors():
-    try:
-        responce = {}
-        responce.update(get_units_list())
-        responce.update(get_departments_list())
-        responce.update(get_soe_list())
-        responce.update(get_sop_list())
-        json_response = json.dumps(responce, ensure_ascii=False, indent=4)
-        return Response(json_response, content_type='application/json; charset=utf-8')
-            
-    except Exception as ex:
-        return jsonify({"STATUS": "Error", "message": str(ex)}), 500
-    
-@app.route('/test', methods=['GET'])
-def test():
-    a = "5"
-    b = "05"
-    c = "0005"
-    return 0
+    """
+    Вызов функции Sever.selector.get_all_selectors() для получения всех редкоизменяемых вспомогательных списков из бд.
+    """
+    return get_all_selectors()
     
 #===================================================================================#
 #--------------------------------РАБОТА С СОДЕРЖАНИЕМ-------------------------------#
@@ -613,9 +464,10 @@ def set_sop():
         id = request.args.get("id")
         if id:
             desc = Description.query.filter_by(id = id).first()
-            print(desc)
             desc.status_id += 1
             add_commit(desc)
+            his = HistoryOfchangingSOP.query.filter_by(description_id = id).first()
+            create_his(desc.id , desc.status_id)
             return jsonify({"STATUS": "Ok", "message": f"{id} status of purchase changed successfully"}), 200
         else:
             return jsonify({"STATUS": "Error", "message": "The \'id\' argument is not set"}), 400
@@ -689,7 +541,7 @@ def aggregate_description_data():
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500
 
 
-
+# Не работает!
 @app.route('/count_executor', methods=['GET'])
 def count_all_executors():
     # Подсчёт уникальных memo_id в таблице Memo
@@ -727,3 +579,12 @@ def count_all_executors():
     }
 
     return jsonify(result), 200
+
+
+@app.route('/fill_his_test', methods=['GET'])
+def fill_his_test():
+    descs = Description.query.all()
+    for desc in descs:
+        for i in range (1, desc.status_id+1):
+            create_his(desc.id, i)
+    return jsonify({"STATUS": "Ok", "message": "Ok"}), 200

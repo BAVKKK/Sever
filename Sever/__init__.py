@@ -1,8 +1,9 @@
-from flask import Flask, session
+from flask import Flask, session, current_app, request
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_jwt_extended import JWTManager
+import functools
 import datetime
 import logging
 
@@ -19,6 +20,16 @@ def configure_logging(app):
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(formatter)
     app.logger.addHandler(file_handler)
+
+def log_request(func):
+    """
+    Декоратор для логирования
+    """
+    @functools.wraps(func)
+    def decorated_function(*args, **kwargs):
+        current_app.logger.info('Request: %s %s', request.method, request.url)
+        return func(*args, **kwargs)
+    return decorated_function
 
 app = Flask(__name__)
 app.secret_key = '+91yyrL/v/+P45IPhHl7ACgQfD24enrXij0uUJRVucU='

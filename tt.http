@@ -1,5 +1,5 @@
 ####
-GET http://127.0.0.1:8000/form_memo?id=5
+GET http://127.0.0.1:8000/form_memo?id=2
 Accept: application/application/json
 
 ####
@@ -73,7 +73,7 @@ Content-Type: application/json
 {
   "ID_MEMO": 0,
   "DATE_OF_CREATION": "2024-12-09",
-  "DATE_OF_APPOINTMENT": "2025-01-01",
+  "DATE_OF_APPOINTMENT": "2025-12-01",
   "STATUS_CODE": 1,
   "STATUS_TEXT": "Ожидание согласования",
   "INFO": "Поиск ошибок",
@@ -172,7 +172,7 @@ Accept: application/json
 Content-Type: application/json
 
 {
-  "LOGIN": "test1",
+  "LOGIN": "test2",
   "PASSWORD": "abcd1234"
 }
 
@@ -182,8 +182,8 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsI
 
 
 ###
-GET http://127.0.0.1:8000/get_reestr?filters={"DESCRIPTION": "Об", "ITEM_NAME": "Св"}
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczNTA2NjAwOCwianRpIjoiOGU3YTliMTgtOWFmOC00NjMzLTk4YzItZDFlZWRkZDAxZjNjIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QxIiwibmJmIjoxNzM1MDY2MDA4LCJjc3JmIjoiYzFhM2U3YTAtOTEzMi00YjFlLThkZWItMDJmYzAwYzQxN2NkIiwiZXhwIjoxNzM1MDczMjA4LCJyb2xlX2lkIjoxLCJpZCI6MX0.rIIqW5FXEKxtiCFyWxLDHsfAshoQMU1jzfAwW2IiZv0
+GET http://127.0.0.1:8000/get_reestr?filters={"EXECUTOR_NAME": "Нов"}
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczNjc5NjM4NCwianRpIjoiZDZiNmMzODUtM2JkMC00MmFmLTkwZGQtYmQyZjk3YjVkODY1IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QyIiwibmJmIjoxNzM2Nzk2Mzg0LCJjc3JmIjoiYjBkOGYzM2EtM2Q5OS00Nzk1LWIzZjItNDkxYjI2NjEzOTBlIiwiZXhwIjoxNzM2ODgyNzg0LCJyb2xlX2lkIjoyLCJpZCI6N30.dJxb7V84dUC6Sg-Qg9db61ok3dFwLRC4IsQX3EcSe2Y
 ###
 GET http://127.0.0.1:8000/accept_memo?id=1&accept=1
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczMzU3Mjk2MywianRpIjoiZjVhZWVjMjMtY2Q0NS00YWRiLWI0NmEtYTkxNjI0ZGY3YzczIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QyIiwibmJmIjoxNzMzNTcyOTYzLCJjc3JmIjoiMTgyNGU4ZWItZDgxYi00ODg5LWJiNzctYzFhNDY0M2U0N2VlIiwiZXhwIjoxNzMzNTgwMTYzLCJyb2xlX2lkIjoyLCJpZCI6N30.rNfZkiJtim6LZTZgq9W5BE0ImjsFufMEhiIvO11Ggrc
@@ -195,7 +195,7 @@ Accept: application/application/json
 
 
 ###
-POST http://127.0.0.1:8000/set_sop?id=46
+POST http://127.0.0.1:8000/set_sop?id=14
 Accept: application/json
 Content-Type: application/json
 
@@ -209,3 +209,6 @@ GET http://127.0.0.1:8000/count_executor
 Accept: application/application/json
 
 
+###
+GET http://127.0.0.1:8000/fill_his_test
+Accept: application/application/json
