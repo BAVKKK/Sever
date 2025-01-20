@@ -9,16 +9,39 @@ import json
 from datetime import datetime as dt
 from datetime import timedelta
 
+from Sever.db.minio_lib import *
 
 from Sever import app, db, log_request
 from Sever.models import *
 from Sever.selector import *
 from Sever.db_utils import *
+from Sever.db.utils import *
 
 # Исправить add_description
 # Подумать над костылем в add_memo
 
-    
+# def get_justi_file(memo_id):
+#     response = []
+#     mime_types = {
+#             'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+#             'application/msword': '.doc',
+#             'application/pdf': '.pdf',
+#             'image/jpeg': '.jpeg',
+#             'image/png': '.png',
+#             'application/x-zip-compressed': '.zip'
+#             }
+#     objects = client.list_objects(bucket_name='sever', prefix=f'{memo_id}/justifications/')
+#     for obj in objects:
+#         if obj is not None:
+#             file = {
+#                 "DATA": f"data:{mime_types['application/pdf']};base64,{from_minio_to_b64str(obj.object_name, 'sever')}",
+#                 "EXT": 'application/pdf',
+#                 "NAME": obj.object_name.split('/')[2]
+#             }
+#             response.append(file)
+        
+#     return response[0] if response != [] else None
+
 def model_for_memo(id):
     """
     Создает модель с формой для служебной записки
@@ -60,7 +83,6 @@ def model_for_memo(id):
                 "STATUS_CODE": status.id if status else 0,
                 "STATUS_TEXT": status.name if status else "",
                 "COEF": status.coef if status else 0,
-                "CONTRACT": desc.contract,
                 "CONTRACT_INFO": desc.contract_info if desc.contract_info else "",
                 "DATE_OF_DELIVERY": desc.date_of_delivery.strftime("%Y-%m-%d") if desc.date_of_delivery else "",
                 "EXECUTOR": {
@@ -78,6 +100,33 @@ def model_for_memo(id):
         status_memo = StatusOfExecution.query.filter_by(id = memo.status_id).first()
         department_creator = Department.query.filter_by(id=creator.department_id).first() if creator else None
         department_executor = Department.query.filter_by(id=executor.department_id).first() if executor else None
+        justification = {
+            "EXT": None,
+            "NAME": None,
+            "DATA": None
+        }
+        if id is not None:
+            mime_types = {
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+                'application/msword': '.doc',
+                'application/pdf': '.pdf',
+                'image/jpeg': '.jpeg',
+                'image/png': '.png',
+                'application/x-zip-compressed': '.zip'
+            }
+            if memo.filename is not None:
+                objects = client.list_objects(bucket_name='sever', prefix=f'{id}/justifications/')
+                justi_file = None
+                for obj in objects: # Тут цикл потому что не знаю как иначе вытащить обж из "Минио обжекст"
+                    if obj is not None:
+                        justi_file = obj
+                if justi_file is not None:
+                    filename = memo.filename
+                    minio_id = f"{id}/justifications/{filename}{mime_types[memo.file_ext]}"
+                    data = f'data:{mime_types[memo.file_ext]};base64,{from_minio_to_b64str(minio_id, "sever")}'
+                    justification["EXT"] = memo.file_ext
+                    justification["DATA"] = data
+                    justification["NAME"] = memo.filename
         data = {
             "ID_MEMO": memo.id,
             "DATE_OF_CREATION": memo.date_of_creation.strftime("%Y-%m-%d"),
@@ -86,6 +135,8 @@ def model_for_memo(id):
             "STATUS_TEXT": status_memo.name if status_memo else "",
             "INFO": memo.info,
             "JUSTIFICATION": memo.description if memo.description else "",
+            "HEAD_COMMENT": memo.head_comment if memo.head_comment else "",
+            "EXECUTOR_COMMENT": memo.executor_comment if memo.executor_comment else "",
             "CREATOR": {
                 "ID": creator.id,
                 "SURNAME": creator.surname,
@@ -102,7 +153,8 @@ def model_for_memo(id):
                 "PATRONYMIC": executor.patronymic if executor else "",
                 "DEPARTMENT": department_executor.name if department_executor else ""
             },
-            "DESCRIPTION": description_list
+            "DESCRIPTION": description_list,
+            "JUSTIFICATION_FILE": justification
         }
         json_response = json.dumps(data, ensure_ascii=False, indent=4)
         return Response(json_response, content_type='application/json; charset=utf-8')
@@ -477,6 +529,10 @@ def set_sop():
 @app.route('/get_aggregate', methods=['GET'])
 @jwt_required()
 def aggregate_description_data():
+    """
+    Хз че это но я что-то да написал
+    Вроде считает количество всех предметов, да ещё и по статусам
+    """
     try:
         # Получение данных пользователя из токена
         claims = get_jwt()  # Получение дополнительных данных из токена
@@ -541,46 +597,6 @@ def aggregate_description_data():
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500
 
 
-# Не работает!
-@app.route('/count_executor', methods=['GET'])
-def count_all_executors():
-    # Подсчёт уникальных memo_id в таблице Memo
-    memo_counts = db.session.query(
-        Memo.id_of_executor,
-        func.count(func.distinct(Memo.id)).label('memo_count')
-    ).filter(Memo.id_of_executor != None).group_by(Memo.id_of_executor).subquery()
-
-    # Подсчёт уникальных memo_id в таблице Description
-    description_counts = db.session.query(
-        Description.id_of_executor,
-        func.count(func.distinct(Description.memo_id)).label('description_count')
-    ).filter(Description.id_of_executor != None).group_by(Description.id_of_executor).subquery()
-
-    # Объединение подсчётов с информацией о сотрудниках
-    combined_counts = db.session.query(
-        Employees.id.label("executor_id"),
-        Employees.name.label("name"),
-        Employees.surname.label("surname"),
-        Employees.patronymic.label("patronymic"),
-        (func.coalesce(memo_counts.c.memo_count, 0) + 
-         func.coalesce(description_counts.c.description_count, 0)).label("total_count")
-    ).outerjoin(memo_counts, Employees.id == memo_counts.c.id_of_executor) \
-     .outerjoin(description_counts, Employees.id == description_counts.c.id_of_executor) \
-     .all()
-
-    # Формирование результата
-    result = {
-        str(row["executor_id"]): {
-            "NAME": row["name"],
-            "SURNAME": row["surname"],
-            "PATRONYMIC": row["patronymic"],
-            "COUNT": row["total_count"]
-        } for row in combined_counts
-    }
-
-    return jsonify(result), 200
-
-
 @app.route('/fill_his_test', methods=['GET'])
 def fill_his_test():
     descs = Description.query.all()
@@ -588,3 +604,29 @@ def fill_his_test():
         for i in range (1, desc.status_id+1):
             create_his(desc.id, i)
     return jsonify({"STATUS": "Ok", "message": "Ok"}), 200
+
+@app.route('/save_file', methods=['POST'])
+def test_save():
+    try:
+        data = request.get_json()
+        memo_id = request.args.get("memo_id")
+        folder = request.args.get("folder")
+        save_file(memo_id, data, folder)
+        return jsonify({"STATUS": "Ok"}), 200
+    except Exception as ex:
+        return jsonify({"STATUS": "Error", "message": str(ex)}), 500
+
+@app.route('/count_memo', methods=['GET'])
+def count_memo():
+    try:
+        mode = request.args.get("mode")
+        if mode == "status":
+            response = count_memo_by_status()
+        elif mode == "executor":
+            response = count_memo_by_executor()
+        else:
+            response = {"msg": "Please chose a mode like a param. Use '?mode=status' or '?mode=executor'."}
+        json_response = json.dumps(response, ensure_ascii=False, indent=4)
+        return Response(json_response, content_type='application/json; charset=utf-8')
+    except Exception as ex:
+        return jsonify({"STATUS": "Error", "message": str(ex)}), 500

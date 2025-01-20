@@ -47,7 +47,7 @@ class Employees(db.Model):
     name = db.Column(db.String(64), nullable=False)
     patronymic = db.Column(db.String(64), nullable=True)
     post = db.Column(db.String(64), nullable=False)
-    department_id = db.Column(db.Integer, db.ForeignKey('department  .id'), nullable=True)
+    department_id = db.Column(db.Integer, db.ForeignKey('department.id'), nullable=True)
     
 class Memo(db.Model):
     __tablename__ = 'memo'
@@ -59,6 +59,11 @@ class Memo(db.Model):
     date_of_appointment = db.Column(db.DateTime, nullable=True)
     status_id = db.Column(db.Integer, db.ForeignKey('status_of_execution.id'), nullable=True)
     id_of_executor = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=True)
+    head_comment = db.Column(db.String, nullable=True)
+    executor_comment = db.Column(db.String, nullable=True)
+
+    file_ext = db.Column(db.String(256), nullable=True)
+    filename = db.Column(db.String(128), nullable=True)
     
 class Description(db.Model):
     __tablename__ = 'description'
@@ -69,7 +74,6 @@ class Description(db.Model):
     count = db.Column(db.Integer, nullable=True)
     unit_id = db.Column(db.Integer, db.ForeignKey('units.id'), nullable=True)
     status_id = db.Column(db.Integer, db.ForeignKey('status_of_purchase.id'), nullable=True)
-    contract = db.Column(db.String(64), nullable=True)
     contract_info = db.Column(db.String, nullable=True)
     date_of_delivery = db.Column(db.DateTime, nullable=True)
     id_of_executor = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=True)
@@ -80,3 +84,12 @@ class HistoryOfchangingSOP(db.Model):
     date_of_setup = db.Column(db.DateTime, nullable=True)
     description_id = db.Column(db.Integer, db.ForeignKey('description.id'), nullable=True)
     setted_status_id = db.Column(db.Integer, db.ForeignKey('status_of_purchase.id'), nullable=True)
+
+class Contract(db.Model):
+    __tablename__ = 'contract'
+    id = db.Column(db.Integer, primary_key=True)
+    memo_id = db.Column(db.Integer, db.ForeignKey('memo.id'), nullable=True)
+    contract_name = db.Column(db.String, nullable=True)
+    payment_name = db.Column(db.String, nullable=True)
+    contract_ext = db.Column(db.String(32), nullable=True)
+    payment_ext = db.Column(db.String(32), nullable=True)
