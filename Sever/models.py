@@ -93,3 +93,17 @@ class Contract(db.Model):
     payment_name = db.Column(db.String, nullable=True)
     contract_ext = db.Column(db.String(32), nullable=True)
     payment_ext = db.Column(db.String(32), nullable=True)
+
+class KanbanColumn(db.Model):
+    __tablename__ = 'kanban_column'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(36), nullable=True)
+
+class Kanban(db.Model):
+    __tablename__ = 'kanban'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=True)
+    column_id = db.Column(db.Integer, db.ForeignKey('kanban_column.id'), nullable=True)
+    info = db.Column(db.String, nullable=True)
+
+    kanban_column = db.relationship('KanbanColumn', backref='kanbans')

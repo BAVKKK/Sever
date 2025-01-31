@@ -3,6 +3,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from flask_jwt_extended import get_jwt
 from sqlalchemy import text, func, or_
+from sqlalchemy.orm import joinedload
 from collections import namedtuple
 import requests
 import json
@@ -41,6 +42,7 @@ from Sever.db.utils import *
 #             response.append(file)
         
 #     return response[0] if response != [] else None
+
 
 def model_for_memo(id):
     """
@@ -628,5 +630,62 @@ def count_memo():
             response = {"msg": "Please chose a mode like a param. Use '?mode=status' or '?mode=executor'."}
         json_response = json.dumps(response, ensure_ascii=False, indent=4)
         return Response(json_response, content_type='application/json; charset=utf-8')
+    except Exception as ex:
+        return jsonify({"STATUS": "Error", "message": str(ex)}), 500
+
+@app.route('/get_kanban', methods=['GET'])
+@jwt_required()
+def get_kanban():
+    try:
+        # Получение данных пользователя из токена
+        claims = get_jwt()  # Получаем дополнительные данные из токена
+        user_id = claims.get("id")
+
+        # Запрос с явным соединением и загрузкой связанных данных
+        kanbans = (
+            Kanban.query
+            .join(KanbanColumn, Kanban.column_id == KanbanColumn.id)
+            .filter(Kanban.user_id == user_id)
+            .options(joinedload(Kanban.kanban_column))  # Загружаем связанные данные
+            .all()
+        )
+        # Формирование ответа
+        response = []
+        for kanban in kanbans:
+            data = {
+                "ID": kanban.id,
+                "COLUMN": kanban.kanban_column.name,  # Доступ к имени столбца
+                "COLUMNID": kanban.column_id,
+                "CONTENT": kanban.info
+            }
+            response.append(data)
+
+        # Возвращаем JSON-ответ
+        json_response = json.dumps(response, ensure_ascii=False, indent=4)
+        return Response(json_response, content_type='application/json; charset=utf-8')
+    except Exception as ex:
+        return jsonify({"STATUS": "Error", "message": str(ex)}), 500
+
+@app.route('/set_kanban', methods=['POST'])
+@jwt_required()
+def set_kanban():
+    try:
+        # Получение данных пользователя из токена
+        claims = get_jwt()  # Получаем дополнительные данные из токена
+        user_id = claims.get("id")
+
+        json_data = request.get_json()
+
+        kanbans = Kanban.query.filter_by(user_id = user_id).delete()
+        db.session.commit()
+        for i in json_data:
+            new_kanban = Kanban(
+                user_id = int(user_id),
+                column_id = int(i["COLUMNID"]),
+                info = i["CONTENT"]
+            )
+            add_commit(new_kanban)
+        
+        return jsonify({"STATUS": "Ok"}), 200
     except Exception as ex:
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500

@@ -7,6 +7,17 @@ from Sever.models import *
 from Sever.db.utils import save_file
 from sqlalchemy import func
 
+
+def fill_zeros(number):
+    if not (0 <= number <= 9999):
+        raise ValueError("Число должно быть в диапазоне от 0 до 9999")
+    return f"{number:04d}"
+
+def remove_leading_zeros(s):
+    if not s.isdigit():
+        raise ValueError("Строка должна содержать только цифры")
+    return int(s)  # int автоматически убирает ведущие нули
+
 def add_commit(param):
     """
     Сокращение для SQLAlchemy
@@ -189,7 +200,7 @@ def count_memo_by_executor():
         # Формирование результата
         response = {}
         for row in combined_counts:
-            if row["total_count"] != 0:
+            if row["total_count"] != 0 and row["executor_id"] != 7:
                 response[str(row["executor_id"])] ={
                         "SURNAME": row["surname"],
                         "NAME": row["name"],

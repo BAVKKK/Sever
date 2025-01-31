@@ -268,3 +268,35 @@ Accept: application/application/json
 GET http://127.0.0.1:8000/get_aggregate?status=3
 Accept: application/application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczNzQwMzM2MywianRpIjoiOWViODU0MWYtNTJkMy00Y2RmLTliNGUtMmM5YmM5ZTI4MjFjIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QyIiwibmJmIjoxNzM3NDAzMzYzLCJjc3JmIjoiMzQ5Zjc3NGEtYmNiNS00MjQ5LWEzNWUtYjE5ZGNlZjY4YjU0IiwiZXhwIjoxNzM3NDg5NzYzLCJyb2xlX2lkIjoyLCJpZCI6N30.PKOvUU-KDECFbnjmKtozdAO3HITNTn8Xf_xcTtKGrP8
+
+###
+GET http://127.0.0.1:8000/get_kanban
+Accept: application/application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczNzQwMzM2MywianRpIjoiOWViODU0MWYtNTJkMy00Y2RmLTliNGUtMmM5YmM5ZTI4MjFjIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QyIiwibmJmIjoxNzM3NDAzMzYzLCJjc3JmIjoiMzQ5Zjc3NGEtYmNiNS00MjQ5LWEzNWUtYjE5ZGNlZjY4YjU0IiwiZXhwIjoxNzM3NDg5NzYzLCJyb2xlX2lkIjoyLCJpZCI6N30.PKOvUU-KDECFbnjmKtozdAO3HITNTn8Xf_xcTtKGrP8
+
+###
+POST http://127.0.0.1:8000/set_kanban
+Accept: application/application/json
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczNzQwMzM2MywianRpIjoiOWViODU0MWYtNTJkMy00Y2RmLTliNGUtMmM5YmM5ZTI4MjFjIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QyIiwibmJmIjoxNzM3NDAzMzYzLCJjc3JmIjoiMzQ5Zjc3NGEtYmNiNS00MjQ5LWEzNWUtYjE5ZGNlZjY4YjU0IiwiZXhwIjoxNzM3NDg5NzYzLCJyb2xlX2lkIjoyLCJpZCI6N30.PKOvUU-KDECFbnjmKtozdAO3HITNTn8Xf_xcTtKGrP8
+
+[
+{
+  "COLUMNID": 1,
+  "CONTENT": "Попробовать"
+},
+{
+  "COLUMNID": 2,
+  "CONTENT": "Делать"
+}
+]
+
+
+
+
+
+
+
+
+
+
