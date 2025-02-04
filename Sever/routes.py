@@ -17,6 +17,7 @@ from Sever.models import *
 from Sever.selector import *
 from Sever.db_utils import *
 from Sever.db.utils import *
+from Sever.constants import *
 
 # Исправить add_description
 # Подумать над костылем в add_memo
@@ -176,12 +177,16 @@ def get_reestr():
 @app.route('/accept_memo', methods=['GET'])
 @jwt_required()
 def accept_memo():
+    """
+    Метод для принятия или отклонения служебной записки.
+    Если передан аргумент 'accept' с значением отличным от нуля, то заявка принята, иначе отклонена
+    """
     try:
         # Получение данных пользователя из токена
         claims = get_jwt()  # Получаем дополнительные данные из токена
         role_id = claims.get("role_id")
 
-        if role_id == 1:
+        if role_id == ConstantRolesID.DEPARTMENT_CHEF_ID:
             memo_id = request.args.get("id")
             status = request.args.get("accept")
 
@@ -191,9 +196,9 @@ def accept_memo():
                 return jsonify({"msg": "memo id is missing"}), 400
 
             memo = Memo.query.filter_by(id = memo_id).first()
-            memo.status_id = 2 if status else 3 # 2 - Зарегистрировна, 3 - Отклонена нач. отдела
+            memo.status_id = ConstantSOE.REGISTERED if status else ConstantSOE.DECLINE_BY_DEP_CHEF # Зарегистрировна, Отклонена нач. отдела
             add_commit(memo)
-        elif role_id == 2:
+        elif role_id == ConstantRolesID.MTO_CHEF_ID:
             memo_id = request.args.get("id")
             status = request.args.get("accept")
 
@@ -203,7 +208,7 @@ def accept_memo():
                 return jsonify({"msg": "memo id is missing"}), 400
 
             memo = Memo.query.filter_by(id = memo_id).first()
-            memo.status_id = 4 if status else 6 # 4 - Исполнение, 6 - Отклонена отделом закупок
+            memo.status_id = ConstantSOE.EXECUTION if status else ConstantSOE.DECLINE_BY_MTO_CHEF # Исполнение, Отклонена отделом закупок
             add_commit(memo)
         else:
             return jsonify({"msg": "Unauthorized role"}), 403
