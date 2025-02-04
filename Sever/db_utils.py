@@ -1,6 +1,8 @@
 """Вспомогательные ф-ции для бд"""
-from flask import current_app, jsonify
+from flask import current_app, jsonify, Response
 from datetime import datetime as dt
+
+import json
 
 from Sever import app, db, log_request
 from Sever.models import *
@@ -8,14 +10,20 @@ from Sever.db.utils import save_file
 from sqlalchemy import func
 
 
+
 def fill_zeros(number):
-    if not (0 <= number <= 9999):
-        raise ValueError("Число должно быть в диапазоне от 0 до 9999")
+    if not isinstance(number, int):
+        raise TypeError("Value must be an integer")
+    if not (0 < number <= 9999):
+        raise ValueError("Value must be in [1; 9999]")
     return f"{number:04d}"
 
 def remove_leading_zeros(s):
+    s = s.strip('"')  # Удаляем кавычки
+    if not s:
+        raise ValueError("String is empty")
     if not s.isdigit():
-        raise ValueError("Строка должна содержать только цифры")
+        raise ValueError("Only numbers can be used")
     return int(s)  # int автоматически убирает ведущие нули
 
 def add_commit(param):
@@ -58,7 +66,6 @@ def add_description(memo_id, data):
                     raise ValueError(f"Invalid date format: {disc['DATE_OF_DELIVERY']}")
             if disc.get("EXECUTOR"):
                 executor_id = disc["EXECUTOR"]["ID"]
-            print(disc.get("ID"))
             if disc.get("ID") is None or disc.get("ID") == 0:
                 new_disc = Description(
                     memo_id=memo_id,
@@ -114,6 +121,7 @@ def add_memo(data):
             )
             add_commit(memo)
         else:
+            data["ID_MEMO"] = remove_leading_zeros(data["ID_MEMO"])
             memo = Memo.query.filter_by(id=data["ID_MEMO"]).first()
 
         # Добавление или обновление данных в служебках
@@ -143,6 +151,129 @@ def add_memo(data):
     except Exception as ex:
         current_app.logger.error(ex)
         db.session.rollback()
+        return jsonify({"STATUS": "Error", "message": str(ex)}), 500
+
+def description_for_memo_form(descriptions):
+    description_list = []
+    for desc in descriptions:
+        executor_desc = Employees.query.filter_by(id = desc.id_of_executor).first() if desc.id_of_executor else None
+        exec_user = Users.query.filter_by(id = desc.id_of_executor).first() if desc.id_of_executor else None
+        department = Department.query.filter_by(id = executor_desc.department_id).first() if executor_desc else None
+        unit = Units.query.filter_by(id = desc.unit_id).first() if desc.unit_id else None
+        status = StatusOfPurchase.query.filter_by(id = desc.status_id).first() if desc.status_id else None
+
+        his = HistoryOfchangingSOP.query.filter_by(description_id = desc.id).all()
+        history = []
+        for hi in his:
+            tmp = {
+                "STATUS_ID": hi.setted_status_id,
+                "DATE": hi.date_of_setup.strftime("%Y-%m-%d")
+            }
+            history.append(tmp)
+
+        description_list.append({
+            "ID": desc.id,
+            "POSITION": desc.pos,
+            "NAME": desc.name,
+            "COUNT": desc.count,
+            "UNIT_CODE": desc.unit_id if unit else 0,
+            "UNIT_TEXT": unit.short_name if unit else "",
+            "STATUS_CODE": status.id if status else 0,
+            "STATUS_TEXT": status.name if status else "",
+            "COEF": status.coef if status else 0,
+            "CONTRACT_INFO": desc.contract_info if desc.contract_info else "",
+            "DATE_OF_DELIVERY": desc.date_of_delivery.strftime("%Y-%m-%d") if desc.date_of_delivery else "",
+            "EXECUTOR": {
+                "ID": executor_desc.id if executor_desc else 0,
+                "SURNAME": executor_desc.surname if executor_desc else "",
+                "NAME": executor_desc.name if executor_desc else "",
+                "PATRONYMIC": executor_desc.patronymic if executor_desc else "",
+                "DEPARTMENT": department.name if department else "",
+                "PHONE": exec_user.phone if exec_user else "",
+                "EMAIL": exec_user.email if exec_user else ""
+            },
+            "HISTORY": history
+        })
+    return description_list
+        
+def model_for_memo(id):
+    """
+    Создает модель с формой для служебной записки
+    """
+    try:
+        memo = Memo.query.filter_by(id=id).first()
+        if not memo:
+            return jsonify({"STATUS": "Error", "message": f"Memo with ID {id} not found"}), 404
+
+        creator = Employees.query.filter_by(id=memo.id_of_creator).first()
+        creator_user = Users.query.filter_by(id=memo.id_of_creator).first()
+        executor = Employees.query.filter_by(id=memo.id_of_executor).first() if memo.id_of_executor else None
+
+        descriptions = Description.query.filter_by(memo_id=id).all()
+        description_list = description_for_memo_form(descriptions)
+        
+        status_memo = StatusOfExecution.query.filter_by(id = memo.status_id).first()
+        department_creator = Department.query.filter_by(id=creator.department_id).first() if creator else None
+        department_executor = Department.query.filter_by(id=executor.department_id).first() if executor else None
+        justification = {
+            "EXT": None,
+            "NAME": None,
+            "DATA": None
+        }
+        if id is not None:
+            mime_types = {
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+                'application/msword': '.doc',
+                'application/pdf': '.pdf',
+                'image/jpeg': '.jpeg',
+                'image/png': '.png',
+                'application/x-zip-compressed': '.zip'
+            }
+            if memo.filename is not None:
+                objects = client.list_objects(bucket_name='sever', prefix=f'{id}/justifications/')
+                justi_file = None
+                for obj in objects: # Тут цикл потому что не знаю как иначе вытащить обж из "Минио обжекст"
+                    if obj is not None:
+                        justi_file = obj
+                if justi_file is not None:
+                    filename = memo.filename
+                    minio_id = f"{id}/justifications/{filename}{mime_types[memo.file_ext]}"
+                    data = f'data:{mime_types[memo.file_ext]};base64,{from_minio_to_b64str(minio_id, "sever")}'
+                    justification["EXT"] = memo.file_ext
+                    justification["DATA"] = data
+                    justification["NAME"] = memo.filename
+        data = {
+            "ID_MEMO": fill_zeros(memo.id),
+            "DATE_OF_CREATION": memo.date_of_creation.strftime("%Y-%m-%d"),
+            "DATE_OF_APPOINTMENT": memo.date_of_appointment.strftime("%Y-%m-%d") if memo.date_of_appointment else "",
+            "STATUS_CODE": memo.status_id if status_memo else 0,
+            "STATUS_TEXT": status_memo.name if status_memo else "",
+            "INFO": memo.info,
+            "JUSTIFICATION": memo.description if memo.description else "",
+            "HEAD_COMMENT": memo.head_comment if memo.head_comment else "",
+            "EXECUTOR_COMMENT": memo.executor_comment if memo.executor_comment else "",
+            "CREATOR": {
+                "ID": creator.id,
+                "SURNAME": creator.surname,
+                "NAME": creator.name,
+                "PATRONYMIC": creator.patronymic,
+                "DEPARTMENT": department_creator.name if department_creator else "",
+                "PHONE": creator_user.phone if creator_user else "",
+                "EMAIL": creator_user.email if creator_user else ""
+            },
+            "EXECUTOR": {
+                "ID": executor.id if executor else 0,
+                "SURNAME": executor.surname if executor else "",
+                "NAME": executor.name if executor else "",
+                "PATRONYMIC": executor.patronymic if executor else "",
+                "DEPARTMENT": department_executor.name if department_executor else ""
+            },
+            "DESCRIPTION": description_list,
+            "JUSTIFICATION_FILE": justification
+        }
+        json_response = json.dumps(data, ensure_ascii=False, indent=4)
+        return Response(json_response, content_type='application/json; charset=utf-8')
+    except Exception as ex:
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500
 
 def count_memo_by_status():

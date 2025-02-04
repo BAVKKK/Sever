@@ -21,147 +21,6 @@ from Sever.db.utils import *
 # Исправить add_description
 # Подумать над костылем в add_memo
 
-# def get_justi_file(memo_id):
-#     response = []
-#     mime_types = {
-#             'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
-#             'application/msword': '.doc',
-#             'application/pdf': '.pdf',
-#             'image/jpeg': '.jpeg',
-#             'image/png': '.png',
-#             'application/x-zip-compressed': '.zip'
-#             }
-#     objects = client.list_objects(bucket_name='sever', prefix=f'{memo_id}/justifications/')
-#     for obj in objects:
-#         if obj is not None:
-#             file = {
-#                 "DATA": f"data:{mime_types['application/pdf']};base64,{from_minio_to_b64str(obj.object_name, 'sever')}",
-#                 "EXT": 'application/pdf',
-#                 "NAME": obj.object_name.split('/')[2]
-#             }
-#             response.append(file)
-        
-#     return response[0] if response != [] else None
-
-
-def model_for_memo(id):
-    """
-    Создает модель с формой для служебной записки
-    """
-    try:
-        memo = Memo.query.filter_by(id=id).first()
-        if not memo:
-            return jsonify({"STATUS": "Error", "message": f"Memo with ID {id} not found"}), 404
-
-        creator = Employees.query.filter_by(id=memo.id_of_creator).first()
-        creator_user = Users.query.filter_by(id=memo.id_of_creator).first()
-        executor = Employees.query.filter_by(id=memo.id_of_executor).first() if memo.id_of_executor else None
-
-        descriptions = Description.query.filter_by(memo_id=id).all()
-        description_list = []
-        for desc in descriptions:
-            executor_desc = Employees.query.filter_by(id = desc.id_of_executor).first() if desc.id_of_executor else None
-            exec_user = Users.query.filter_by(id = desc.id_of_executor).first() if desc.id_of_executor else None
-            department = Department.query.filter_by(id = executor_desc.department_id).first() if executor_desc else None
-            unit = Units.query.filter_by(id = desc.unit_id).first() if desc.unit_id else None
-            status = StatusOfPurchase.query.filter_by(id = desc.status_id).first() if desc.status_id else None
-
-            his = HistoryOfchangingSOP.query.filter_by(description_id = desc.id).all()
-            history = []
-            for hi in his:
-                tmp = {
-                    "STATUS_ID": hi.setted_status_id,
-                    "DATE": hi.date_of_setup.strftime("%Y-%m-%d")
-                }
-                history.append(tmp)
-
-            description_list.append({
-                "ID": desc.id,
-                "POSITION": desc.pos,
-                "NAME": desc.name,
-                "COUNT": desc.count,
-                "UNIT_CODE": desc.unit_id if unit else 0,
-                "UNIT_TEXT": unit.short_name if unit else "",
-                "STATUS_CODE": status.id if status else 0,
-                "STATUS_TEXT": status.name if status else "",
-                "COEF": status.coef if status else 0,
-                "CONTRACT_INFO": desc.contract_info if desc.contract_info else "",
-                "DATE_OF_DELIVERY": desc.date_of_delivery.strftime("%Y-%m-%d") if desc.date_of_delivery else "",
-                "EXECUTOR": {
-                    "ID": executor_desc.id if executor_desc else 0,
-                    "SURNAME": executor_desc.surname if executor_desc else "",
-                    "NAME": executor_desc.name if executor_desc else "",
-                    "PATRONYMIC": executor_desc.patronymic if executor_desc else "",
-                    "DEPARTMENT": department.name if department else "",
-                    "PHONE": exec_user.phone if exec_user else "",
-                    "EMAIL": exec_user.email if exec_user else ""
-                },
-                "HISTORY": history
-            })
-        
-        status_memo = StatusOfExecution.query.filter_by(id = memo.status_id).first()
-        department_creator = Department.query.filter_by(id=creator.department_id).first() if creator else None
-        department_executor = Department.query.filter_by(id=executor.department_id).first() if executor else None
-        justification = {
-            "EXT": None,
-            "NAME": None,
-            "DATA": None
-        }
-        if id is not None:
-            mime_types = {
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
-                'application/msword': '.doc',
-                'application/pdf': '.pdf',
-                'image/jpeg': '.jpeg',
-                'image/png': '.png',
-                'application/x-zip-compressed': '.zip'
-            }
-            if memo.filename is not None:
-                objects = client.list_objects(bucket_name='sever', prefix=f'{id}/justifications/')
-                justi_file = None
-                for obj in objects: # Тут цикл потому что не знаю как иначе вытащить обж из "Минио обжекст"
-                    if obj is not None:
-                        justi_file = obj
-                if justi_file is not None:
-                    filename = memo.filename
-                    minio_id = f"{id}/justifications/{filename}{mime_types[memo.file_ext]}"
-                    data = f'data:{mime_types[memo.file_ext]};base64,{from_minio_to_b64str(minio_id, "sever")}'
-                    justification["EXT"] = memo.file_ext
-                    justification["DATA"] = data
-                    justification["NAME"] = memo.filename
-        data = {
-            "ID_MEMO": memo.id,
-            "DATE_OF_CREATION": memo.date_of_creation.strftime("%Y-%m-%d"),
-            "DATE_OF_APPOINTMENT": memo.date_of_appointment.strftime("%Y-%m-%d") if memo.date_of_appointment else "",
-            "STATUS_CODE": memo.status_id if status_memo else 0,
-            "STATUS_TEXT": status_memo.name if status_memo else "",
-            "INFO": memo.info,
-            "JUSTIFICATION": memo.description if memo.description else "",
-            "HEAD_COMMENT": memo.head_comment if memo.head_comment else "",
-            "EXECUTOR_COMMENT": memo.executor_comment if memo.executor_comment else "",
-            "CREATOR": {
-                "ID": creator.id,
-                "SURNAME": creator.surname,
-                "NAME": creator.name,
-                "PATRONYMIC": creator.patronymic,
-                "DEPARTMENT": department_creator.name if department_creator else "",
-                "PHONE": creator_user.phone if creator_user else "",
-                "EMAIL": creator_user.email if creator_user else ""
-            },
-            "EXECUTOR": {
-                "ID": executor.id if executor else 0,
-                "SURNAME": executor.surname if executor else "",
-                "NAME": executor.name if executor else "",
-                "PATRONYMIC": executor.patronymic if executor else "",
-                "DEPARTMENT": department_executor.name if department_executor else ""
-            },
-            "DESCRIPTION": description_list,
-            "JUSTIFICATION_FILE": justification
-        }
-        json_response = json.dumps(data, ensure_ascii=False, indent=4)
-        return Response(json_response, content_type='application/json; charset=utf-8')
-    except Exception as ex:
-        return jsonify({"STATUS": "Error", "message": str(ex)}), 500
 
 @app.route('/', methods=['GET', 'POST'])
 def main():
@@ -175,6 +34,11 @@ def main():
 
 @app.route('/form_memo', methods=['GET', 'POST'])
 def form():
+    """
+    Метод для записи служебной записки в БД (POST)
+    или
+    Метод для получения служебной запиский из БД (GET)
+    """
     try:
         if request.method == "POST":
             json_data = request.get_json()
@@ -186,7 +50,7 @@ def form():
         if request.method == "GET":
             id = request.args.get("id")
             if id is not None:
-                id = int(id)
+                id = remove_leading_zeros(id)
             return model_for_memo(id)
     except Exception as ex:
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500
@@ -295,7 +159,7 @@ def get_reestr():
             department = Department.query.filter_by(id=creator.department_id).first()
             data = {
                 "NAME": memo.info,
-                "ID": memo.id,
+                "ID": fill_zeros(memo.id),
                 "STATUS_ID": memo.status_id,
                 "STATUS_TEXT": StatusOfExecution.query.filter_by(id=memo.status_id).first().name,
                 "CREATOR_DEPARTMENT": department.name if department else "",
@@ -318,17 +182,27 @@ def accept_memo():
         role_id = claims.get("role_id")
 
         if role_id == 1:
-            id_memo = request.args.get("id")
+            memo_id = request.args.get("id")
             status = request.args.get("accept")
 
-            memo = Memo.query.filter_by(id = id_memo).first()
+            if memo_id is not None:
+                memo_id == remove_leading_zeros(memo_id)
+            else:
+                return jsonify({"msg": "memo id is missing"}), 400
+
+            memo = Memo.query.filter_by(id = memo_id).first()
             memo.status_id = 2 if status else 3 # 2 - Зарегистрировна, 3 - Отклонена нач. отдела
             add_commit(memo)
         elif role_id == 2:
-            id_memo = request.args.get("id")
+            memo_id = request.args.get("id")
             status = request.args.get("accept")
 
-            memo = Memo.query.filter_by(id = id_memo).first()
+            if memo_id is not None:
+                memo_id == remove_leading_zeros(memo_id)
+            else:
+                return jsonify({"msg": "memo id is missing"}), 400
+
+            memo = Memo.query.filter_by(id = memo_id).first()
             memo.status_id = 4 if status else 6 # 4 - Исполнение, 6 - Отклонена отделом закупок
             add_commit(memo)
         else:
@@ -353,7 +227,6 @@ def apply_users_filters(query, filters):
             query = query.filter(Users.role_id == filt)
         return query
     except Exception as ex:
-        print(ex)
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500
 
 @app.route('/get_users', methods=['GET'])
@@ -614,6 +487,12 @@ def test_save():
         memo_id = request.args.get("memo_id")
         folder = request.args.get("folder")
         save_file(memo_id, data, folder)
+
+        if memo_id is not None:
+            memo_id == remove_leading_zeros(memo_id)
+        else:
+            return jsonify({"msg": "memo id is missing"}), 400
+
         return jsonify({"STATUS": "Ok"}), 200
     except Exception as ex:
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500
