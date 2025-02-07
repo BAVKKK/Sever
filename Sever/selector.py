@@ -3,7 +3,7 @@ from flask import jsonify, Response
 import json
 from Sever import app, db
 from Sever.models import *
-
+from Sever.constants import *
 
 def get_units_list():
     try:
@@ -38,19 +38,40 @@ def get_departments_list():
 
 def get_sop_list():
     try:
-        responce = []
-        sops = StatusOfPurchase.query.all()
-        for sop in sops:
-            data = {
+        response = {"STATUS_OF_PURCHASE": {}}
+        
+        # Загружаем статусы закупок из БД в словарь с coef и coef2
+        sops = {
+            sop.id: {
                 "ID": sop.id,
                 "NAME": sop.name,
-                "COEF": sop.coef
-            }
-            responce.append(data)
+                "COEF": sop.coef,
+                "COEF2": sop.coef2
+            } for sop in StatusOfPurchase.query.all()
+        }
 
-        return {"STATUS_OF_PURCHASE": responce}
+        # Добавляем DEFAULT как первую запись
+        if ConstantSOP.NOT_SETTED in sops:
+            default_sop = sops[ConstantSOP.NOT_SETTED].copy()  # Создаем копию, чтобы не менять исходный словарь
+            default_sop.pop("COEF2", None)  # Удаляем COEF2, если он есть
+            response["STATUS_OF_PURCHASE"]["DEFAULT"] = default_sop
+
+        # Формируем структуру согласно ConstantSOP.CONTRACT_RULES
+        for contract_type, statuses in ConstantSOP.CONTRACT_RULES.items():
+            response["STATUS_OF_PURCHASE"][contract_type] = [
+                {
+                    "ID": sops[s_id]["ID"],
+                    "NAME": sops[s_id]["NAME"],
+                    "COEF": sops[s_id]["COEF2"] if contract_type == ConstantSOP.CONTRACT_TYPE["Invoice-contract"] else sops[s_id]["COEF"]
+                }
+                for s_id in statuses if s_id in sops
+            ]
+
+        return response
     except Exception as ex:
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500
+
+
 
 def get_soe_list():
     try:

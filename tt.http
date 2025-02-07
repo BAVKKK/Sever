@@ -1,5 +1,5 @@
 ####
-GET http://127.0.0.1:8000/form_memo?id=0044
+GET http://127.0.0.1:8000/form_memo?id=0004
 Accept: application/application/json
 
 ####
@@ -8,11 +8,150 @@ Accept: application/json
 Content-Type: application/json
 
 {
-  "ID_MEMO": "0056",
-  "DATE_OF_CREATION": "2024-10-26",
+  "ID_MEMO": "0004",
+  "DATE_OF_CREATION": "2024-10-27",
+  "DATE_OF_APPOINTMENT": "2025-01-15",
+  "STATUS_CODE": 4,
+  "STATUS_TEXT": "Исполнение",
+  "INFO": "Проверка 3",
+  "JUSTIFICATION": "Описание для описаний",
+  "HEAD_COMMENT": "Проверка согласования",
+  "EXECUTOR_COMMENT": "вапвап",
+  "CREATOR": {
+    "ID": 4,
+    "SURNAME": "Петрова",
+    "NAME": "Мария",
+    "PATRONYMIC": "Александровна",
+    "DEPARTMENT": "Отдел разработки IT-продуктов",
+    "PHONE": "+7987-564-32-14",
+    "EMAIL": "test4@mail.ru"
+  },
+  "EXECUTOR": {
+    "ID": 7,
+    "SURNAME": "Федорова",
+    "NAME": "Анна",
+    "PATRONYMIC": "Сергеевна",
+    "DEPARTMENT": "Отдел 13"
+  },
+  "DESCRIPTION": [
+    {
+      "ID": 22,
+      "POSITION": 3,
+      "NAME": "Скотч",
+      "COUNT": 12,
+      "UNIT_CODE": 6,
+      "UNIT_TEXT": "ШТ",
+      "STATUS_CODE": 8,
+      "STATUS_TEXT": "Оплата",
+      "COEF": null,
+      "CONTRACT_INFO": "",
+      "DATE_OF_DELIVERY": "2025-01-18",
+      "CONTRACT_TYPE": 1,
+      "EXECUTOR": {
+        "ID": 11,
+        "SURNAME": "Новиков",
+        "NAME": "Олег",
+        "PATRONYMIC": "Геннадьевич",
+        "DEPARTMENT": "Отдел 13",
+        "PHONE": "+7987-564-32-15",
+        "EMAIL": "test51@mail.ru"
+      },
+      "HISTORY": [
+        {
+          "STATUS_ID": 1,
+          "DATE": "2025-01-13"
+        },
+        {
+          "STATUS_ID": 2,
+          "DATE": "2025-01-13"
+        },
+        {
+          "STATUS_ID": 8,
+          "DATE": "2025-02-04"
+        }
+      ]
+    },
+    {
+      "ID": 20,
+      "POSITION": 1,
+      "NAME": "Бумага",
+      "COUNT": 30,
+      "UNIT_CODE": 7,
+      "UNIT_TEXT": "Пачка",
+      "STATUS_CODE": 2,
+      "STATUS_TEXT": "Заявка на проведения закупки",
+      "COEF": 0.15,
+      "CONTRACT_INFO": "",
+      "DATE_OF_DELIVERY": "2025-01-08",
+      "CONTRACT_TYPE": 2,
+      "EXECUTOR": {
+        "ID": 5,
+        "SURNAME": "Смирнов",
+        "NAME": "Дмитрий",
+        "PATRONYMIC": "Николаевич",
+        "DEPARTMENT": "Отдел 13",
+        "PHONE": "+7987-564-32-15",
+        "EMAIL": "test5@mail.ru"
+      },
+      "HISTORY": [
+        {
+          "STATUS_ID": 1,
+          "DATE": "2025-01-13"
+        },
+        {
+          "STATUS_ID": 2,
+          "DATE": "2025-01-13"
+        }
+      ]
+    },
+    {
+      "ID": 21,
+      "POSITION": 2,
+      "NAME": "Клей",
+      "COUNT": 5,
+      "UNIT_CODE": 6,
+      "UNIT_TEXT": "ШТ",
+      "STATUS_CODE": 1,
+      "STATUS_TEXT": "Запрос ТКП",
+      "COEF": 0.1,
+      "CONTRACT_INFO": "",
+      "DATE_OF_DELIVERY": "2025-01-13",
+      "CONTRACT_TYPE": 2,
+      "EXECUTOR": {
+        "ID": 10,
+        "SURNAME": "Соколова",
+        "NAME": "Екатерина",
+        "PATRONYMIC": "Владимировна",
+        "DEPARTMENT": "Отдел 13",
+        "PHONE": "+7987-564-32-17",
+        "EMAIL": "test52@mail.ru"
+      },
+      "HISTORY": [
+        {
+          "STATUS_ID": 1,
+          "DATE": "2025-01-13"
+        }
+      ]
+    }
+  ],
+  "JUSTIFICATION_FILE": {
+    "EXT": null,
+    "NAME": null,
+    "DATA": null
+  }
+}
+
+####
+POST http://127.0.0.1:8000/form_memo
+Accept: application/json
+Content-Type: application/json
+
+{
+  "ID_MEMO": "0044",
+  "DATE_OF_CREATION": "2025-01-20",
   "DATE_OF_APPOINTMENT": "2025-01-10",
   "STATUS_CODE": 1,
-  "STATUS_TEXT": "Новая на проверку",
+  "STATUS_TEXT": "Ожидание согласования",
   "INFO": "Новая на проверк",
   "JUSTIFICATION": "Проверка фильтра",
   "HEAD_COMMENT": "",
@@ -35,7 +174,7 @@ Content-Type: application/json
   },
   "DESCRIPTION": [
     {
-      "ID": 0,
+      "ID": 98,
       "POSITION": 2,
       "NAME": "Соль",
       "COUNT": 15,
@@ -46,6 +185,7 @@ Content-Type: application/json
       "COEF": 0.1,
       "CONTRACT_INFO": "",
       "DATE_OF_DELIVERY": "2025-01-17",
+      "CONTRACT_TYPE": 1,
       "EXECUTOR": {
         "ID": 10,
         "SURNAME": "Соколова",
@@ -56,10 +196,14 @@ Content-Type: application/json
         "EMAIL": "test52@mail.ru"
       },
       "HISTORY": [
+        {
+          "STATUS_ID": 1,
+          "DATE": "2025-01-20"
+        }
       ]
     },
     {
-      "ID": 0,
+      "ID": 99,
       "POSITION": 3,
       "NAME": "Мука",
       "COUNT": 25,
@@ -68,7 +212,7 @@ Content-Type: application/json
       "STATUS_CODE": 1,
       "STATUS_TEXT": "Запрос ТКП",
       "COEF": 0.1,
-      "CONTRACT_INFO": "",
+      "CONTRACT_INFO": "",Н
       "DATE_OF_DELIVERY": "2025-01-22",
       "EXECUTOR": {
         "ID": 10,
@@ -82,12 +226,12 @@ Content-Type: application/json
       "HISTORY": [
         {
           "STATUS_ID": 1,
-          "DATE": "2025-01-13"
+          "DATE": "2025-01-20"
         }
       ]
     },
     {
-      "ID": 0,
+      "ID": 100,
       "POSITION": 1,
       "NAME": "Соль",
       "COUNT": 20,
@@ -108,6 +252,10 @@ Content-Type: application/json
         "EMAIL": "test52@mail.ru"
       },
       "HISTORY": [
+        {
+          "STATUS_ID": 1,
+          "DATE": "2025-01-20"
+        }
       ]
     }
   ],
@@ -116,84 +264,6 @@ Content-Type: application/json
     "NAME": null,
     "DATA": null
   }
-}
-
-####
-POST http://127.0.0.1:8000/form_memo
-Accept: application/json
-Content-Type: application/json
-
-{
-  "ID_MEMO": 0,
-  "DATE_OF_CREATION": "2024-12-09",
-  "DATE_OF_APPOINTMENT": "2025-12-01",
-  "STATUS_CODE": 1,
-  "STATUS_TEXT": "Ожидание согласования",
-  "INFO": "Поиск ошибок",
-  "JUSTIFICATION": "Обосновал",
-  "ACCEPT_COMMENT": "",
-  "CREATOR": {
-    "ID": 1,
-    "SURNAME": "Иванов",
-    "NAME": "Алексей",
-    "PATRONYMIC": "Сергеевич",
-    "DEPARTMENT": "Отдел разработки IT-продуктов",
-    "PHONE": "",
-    "EMAIL": ""
-  },
-  "EXECUTOR": {
-    "ID": 7,
-    "SURNAME": "Федорова",
-    "NAME": "Анна",
-    "PATRONYMIC": "Сергеевна",
-    "DEPARTMENT": "Отдел 13"
-  },
-  "DESCRIPTION": [
-    {
-      "ID": 54,
-      "POSITION": 1,
-      "NAME": "Свёкла",
-      "COUNT": 15,
-      "UNIT_CODE": 3,
-      "UNIT_TEXT": "КГ",
-      "STATUS_CODE": 1,
-      "STATUS_TEXT": "Запрос ТКП",
-      "COEF": 0.1,
-      "CONTRACT_INFO": "",
-      "DATE_OF_DELIVERY": "",
-      "EXECUTOR": {
-        "ID": 5,
-        "SURNAME": "",
-        "NAME": "",
-        "PATRONYMIC": "",
-        "DEPARTMENT": "",
-        "PHONE": "",
-        "EMAIL": ""
-      }
-    },
-    {
-      "ID": 55,
-      "POSITION": 1,
-      "NAME": "Картошка",
-      "COUNT": 5,
-      "UNIT_CODE": 3,
-      "UNIT_TEXT": "КГ",
-      "STATUS_CODE": 1,
-      "STATUS_TEXT": "Запрос ТКП",
-      "COEF": 0.1,
-      "CONTRACT_INFO": "",
-      "DATE_OF_DELIVERY": "",
-      "EXECUTOR": {
-        "ID": 5,
-        "SURNAME": "",
-        "NAME": "",
-        "PATRONYMIC": "",
-        "DEPARTMENT": "",
-        "PHONE": "",
-        "EMAIL": ""
-      }
-    }
-  ]
 }
 
 
@@ -224,7 +294,7 @@ Accept: application/json
 Content-Type: application/json
 
 {
-  "LOGIN": "test1",
+  "LOGIN": "test2",
   "PASSWORD": "abcd1234"
 }
 
@@ -235,7 +305,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsI
 
 ###
 GET http://127.0.0.1:8000/get_reestr
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczNzM5Mjk1OCwianRpIjoiZTZhNWFkZTUtY2Q5Zi00OTc4LTliMDUtNmMxYTllZWZlNWM4IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QxIiwibmJmIjoxNzM3MzkyOTU4LCJjc3JmIjoiZmRkMTNhZjctYjY1Yy00NmE4LWFiM2UtMzMwNWZiOGExOTZjIiwiZXhwIjoxNzM3NDc5MzU4LCJyb2xlX2lkIjoxLCJpZCI6MX0.7ih6_9KoIICsCI6WJ4HeS4sgnDy16ju8yBxZLOk54Bs
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczODg1NjQ5OSwianRpIjoiN2VhMjk3MGYtYmVmMi00NWFlLWIyY2QtYTU4NmUzMWNmMjJhIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QyIiwibmJmIjoxNzM4ODU2NDk5LCJjc3JmIjoiMjRjN2E5OTgtYTc3MC00Nzk0LThjMGQtZjZiYmFiMjMyYTE3IiwiZXhwIjoxNzM4OTQyODk5LCJyb2xlX2lkIjoyLCJpZCI6N30.-qSmTWtnMLgswKmmXE1ND424f53fEMalhDnt0Heim_4
 ###
 GET http://127.0.0.1:8000/accept_memo?id=1&accept=1
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczODY2ODM5MiwianRpIjoiMDIyM2QwZjgtY2QzYy00YTMxLWI3NDQtMjk0NzVlOGYyNjJhIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QxIiwibmJmIjoxNzM4NjY4MzkyLCJjc3JmIjoiY2NkMDBjM2YtMWZkOS00MTU0LWJkOGQtYzM1ZGYwNmVjYjRiIiwiZXhwIjoxNzM4NzU0NzkyLCJyb2xlX2lkIjoxLCJpZCI6MX0.rupNhLxGVh6SS3KG92-OGAcb7uxFsnC67StZZv1b5Ho
@@ -247,9 +317,17 @@ Accept: application/application/json
 
 
 ###
-POST http://127.0.0.1:8000/set_sop?id=14
+POST http://127.0.0.1:8000/set_sop?id=21
 Accept: application/json
 Content-Type: application/json
+
+###
+POST http://127.0.0.1:8000/set_contract_type?type=2
+Accept: application/json
+Content-Type: application/json
+
+[14, 15, 16]
+
 
 ###
 GET http://127.0.0.1:8000/get_users?filters={"ROLE": 5, "FIO": ""}
@@ -265,9 +343,9 @@ GET http://127.0.0.1:8000/count_memo?mode=status
 Accept: application/application/json
 
 ###
-GET http://127.0.0.1:8000/get_aggregate
+GET http://127.0.0.1:8000/get_aggregate?status=2
 Accept: application/application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczODY1NjYwNCwianRpIjoiYWNkNjJhNzUtMjI4Ni00OWRkLWEzZWUtMDk0ZGIzMmVmNmYyIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3Q1IiwibmJmIjoxNzM4NjU2NjA0LCJjc3JmIjoiYjQ2NjRlNzAtZmJlNC00ZTI2LTg5NzktY2ExNjZkYmFjYTA5IiwiZXhwIjoxNzM4NzQzMDA0LCJyb2xlX2lkIjo1LCJpZCI6NX0.EY6X0-qBXGTpxUKt4gY5eYlBuiiPccg9CQwINDF32yg
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczODkxNzU3NiwianRpIjoiMzQ3Nzk3YTgtNjUzYS00M2E0LTkxODYtZjFmZGIyZTc3Zjc0IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QyIiwibmJmIjoxNzM4OTE3NTc2LCJjc3JmIjoiNGQwZTU5YzktYjU1ZS00Y2YzLWJlNzgtZTBhNTM1NzNkZGE1IiwiZXhwIjoxNzM5MDAzOTc2LCJyb2xlX2lkIjoyLCJpZCI6N30.CTWsPfxXlSDbEWAz4sjqj8WrunkPP7lliJka4QbZ79Q
 
 ###
 GET http://127.0.0.1:8000/get_kanban
@@ -290,13 +368,4 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsI
   "CONTENT": "Делать"
 }
 ]
-
-
-
-
-
-
-
-
-
 

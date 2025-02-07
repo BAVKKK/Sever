@@ -4,7 +4,7 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identi
 from flask_jwt_extended import get_jwt
 from sqlalchemy import text, func, or_
 from sqlalchemy.orm import joinedload
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 import requests
 import json
 from datetime import datetime as dt
@@ -106,35 +106,30 @@ def get_reestr():
             filters = json.loads(filters)
 
         user = Employees.query.filter_by(id=user_id).first()
-        statuses = []
         # Определяем базовый запрос
         query = Memo.query
 
         # Определяем фильтрацию по ролям
-        if role_id == 1:
-            # Для роли "Руководитель отдела" (role_id == 1)
+        if role_id == ConstantRolesID.DEPARTMENT_CHEF_ID:
+            # Для роли "Руководитель отдела"
             department_id = user.department_id  # Получаем department_id руководителя
-            statuses = [1, 2, 3, 4, 5, 6]
             query = query.filter(Memo.id_of_creator.in_(
                 db.session.query(Employees.id).filter_by(department_id=department_id)
             ))
-        elif role_id in [2, 3]:  # Если пользователь из групп 2 или 3
-            # Получаем все заявки из таблицы memo
-            statuses = [2, 4, 5, 6]
-            pass  # Для всех заявок фильтры не применяются
-        elif role_id == 4:  # Если пользователь из группы 4
+        elif role_id in [ConstantRolesID.MTO_CHEF_ID, ConstantRolesID.COMPANY_LEAD_ID]: # Пока на эти роли нет никакой особой логике, но если убрать поймаем 403
+            pass
+        elif role_id == ConstantRolesID.EMPLOYEE_ID:  # Если пользователь сотрудник
             # Получаем заявки, где user.id либо в id_executor, либо в id_creator
-            statuses = [1, 2, 3, 4, 5, 6]
             query = query.filter(
                 (Memo.id_of_executor == user_id) | (Memo.id_of_creator == user_id)
             )
-        elif role_id == 5:  # Если пользователь из группы 5
+        elif role_id == ConstantRolesID.MTO_EMPLOYEE_ID:  # Если пользователь сотрудник отдела МТО
             # Получаем только те заявки, где пользователь указан в id_executor
-            statuses = [2, 4, 5, 6]
             query = query.filter(Memo.id_of_executor == user_id)
         else:
             return jsonify({"msg": "Unauthorized role"}), 403
 
+        statuses = SOEForRoles[role_id]
         # Применяем фильтр по статусу, если передан
         if status_id is not None:
             if int(status_id) in statuses:
@@ -390,92 +385,141 @@ def get_selectors():
 #--------------------------------РАБОТА С СОДЕРЖАНИЕМ-------------------------------#
 #===================================================================================#
 
+def next_sop(current_sop, type):
+    try:
+        if type is None:
+            type = ConstantSOP.CONTRACT_TYPE["Contract"] # По умолчанию установим тип договора как обычный договор
+        if ConstantSOP.CONTRACT_RULES[type].index(current_sop) + 1 < len(ConstantSOP.CONTRACT_RULES[type]):
+            next_value = ConstantSOP.CONTRACT_RULES[type][ConstantSOP.CONTRACT_RULES[type].index(current_sop) + 1]
+            return next_value
+        else:
+            raise ValueError("Status not setted. Last value yet.")
+    except Exception as ex:
+        raise ValueError(f"{ex}")
+
 @app.route('/set_sop', methods=['POST'])
 def set_sop():
     try:
         id = request.args.get("id")
         if id:
             desc = Description.query.filter_by(id = id).first()
-            desc.status_id += 1
+            desc.status_id = next_sop(desc.status_id, desc.contract_type)
             add_commit(desc)
             his = HistoryOfchangingSOP.query.filter_by(description_id = id).first()
             create_his(desc.id , desc.status_id)
             return jsonify({"STATUS": "Ok", "message": f"{id} status of purchase changed successfully"}), 200
         else:
             return jsonify({"STATUS": "Error", "message": "The \'id\' argument is not set"}), 400
+    except ValueError as ve:
+        return jsonify({"STATUS": "Error", "message": str(ex)}), 400
     except Exception as ex:
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500
-    
+
+
 @app.route('/get_aggregate', methods=['GET'])
 @jwt_required()
 def aggregate_description_data():
     """
-    Хз че это но я что-то да написал
-    Вроде считает количество всех предметов, да ещё и по статусам
+    Агрегация данных по memo_id и name с учетом ролей и статуса memo.
     """
     try:
-        # Получение данных пользователя из токена
-        claims = get_jwt()  # Получение дополнительных данных из токена
+        claims = get_jwt()
         role_id = claims.get("role_id")
         user_id = claims.get("id")
 
-        # Получение параметра status из запроса
         status = request.args.get("status")
 
-        # Определяем базовый запрос
-        query = db.session.query(
+        # Первый запрос: агрегированные данные
+        query_aggregated = db.session.query(
+            Description.memo_id,
             Description.name,
+            Description.contract_type,
             func.sum(Description.count).label('total_count'),
             Units.short_name.label('short_name'),
-            Units.full_name.label('full_name')
-        ).join(
-            Units, Description.unit_id == Units.id
-        )
+            Units.full_name.label('full_name'),
+            Memo.status_id
+        ).join(Units, Description.unit_id == Units.id)
+        query_aggregated = query_aggregated.join(Memo, Description.memo_id == Memo.id)
 
-        # Применяем фильтр по status_id, если параметр status передан
         if status is not None:
-            count = db.session.query(func.count(StatusOfPurchase.id)).scalar()
+            count = db.session.query(func.count(Memo.status_id)).scalar()
             if int(status) > 0 and int(status) <= count:
-                query = query.filter(Description.status_id == status)
+                query_aggregated = query_aggregated.filter(Description.status_id == status)
             else:
                 return jsonify({"STATUS": "Error", "message": "Unknown status"}), 400
 
-        # Группируем данные
-        query = query.group_by(
+        query_aggregated = query_aggregated.group_by(
+            Description.memo_id,
             Description.name,
+            Description.contract_type,
             Units.short_name,
-            Units.full_name
+            Units.full_name,
+            Memo.status_id
         )
 
-        # Фильтрация данных в зависимости от роли
-        if role_id == 2:
-            # Роль 2 видит всю агрегацию
-            pass
-        elif role_id == 5:
-            # Роль 5 видит только те записи, где он указан в id_of_executor
-            query = query.filter(Description.id_of_executor == user_id)
+        # Фильтрация по ролям
+        if role_id == ConstantRolesID.MTO_CHEF_ID:
+            allowed_statuses = SOEForRoles.get(ConstantRolesID.MTO_CHEF_ID, [])
+            print(allowed_statuses)
+            query_aggregated = query_aggregated.filter(Memo.status_id.in_(allowed_statuses))
+        elif role_id == ConstantRolesID.MTO_EMPLOYEE_ID:
+            query_aggregated = query_aggregated.filter(Description.id_of_executor == user_id) # Здесь статусы не проверяются, т.к. если исполнитель назначен, то статус уже должен быть не ниже уровня Зарегестрировано
         else:
             return jsonify({"STATUS": "Error", "message": "Unauthorized role"}), 403
 
-        # Выполняем запрос
-        aggregated_data = query.all()
+        aggregated_data = query_aggregated.all()
 
-        # Преобразуем результат в список словарей
-        result = [
-            {
-                "NAME": row.name,
-                "TOTAL_COUNT": row.total_count,
-                "SHORT_NAME": row.short_name,
-                "FULL_NAME": row.full_name
-            }
-            for row in aggregated_data
-        ]
+        # Второй запрос: детали (без группировки)
+        query_details = db.session.query(
+            Description.id,
+            Description.memo_id,
+            Description.name,
+            Description.count
+        ).filter(Description.status_id == status)
 
-        json_response = json.dumps(result, ensure_ascii=False, indent=4)
+        details_data = query_details.all()
+
+        # Создаем словарь для быстрого доступа к деталям
+        details_by_memo = {}
+        for row in details_data:
+            key = (row.memo_id, row.name)
+            if key not in details_by_memo:
+                details_by_memo[key] = []
+            details_by_memo[key].append({
+                "ID": row.id,
+                "MEMO_ID": row.memo_id,
+                "COUNT": row.count
+            })
+
+        # Формируем итоговую структуру
+        result = {}
+        for row in aggregated_data:
+            key = (row.name, row.short_name)  # Теперь ключ будет комбинированным: по наименованию и единице измерения
+            if key not in result:
+                result[key] = {
+                    "NAME": row.name,
+                    "TOTAL_COUNT": 0,
+                    "CONTRACT_TYPE": row.contract_type,
+                    "SHORT_NAME": row.short_name,
+                    "FULL_NAME": row.full_name,
+                    "BY_MEMO": []
+                }
+
+            # Агрегируем количество
+            result[key]["TOTAL_COUNT"] += row.total_count
+
+            # Добавляем детали в BY_MEMO
+            memo_details = details_by_memo.get((row.memo_id, row.name), [])
+            for detail in memo_details:
+                result[key]["BY_MEMO"].append(detail)
+
+        # Теперь объединяем все записи в список
+        final_result = list(result.values())
+        json_response = json.dumps(final_result, ensure_ascii=False, indent=4)
         return Response(json_response, content_type='application/json; charset=utf-8')
+
     except Exception as ex:
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500
-
 
 @app.route('/fill_his_test', methods=['GET'])
 def fill_his_test():
@@ -504,11 +548,14 @@ def test_save():
 
 @app.route('/count_memo', methods=['GET'])
 def count_memo():
+    """
+    Метод для подсчета служебных записок по фильтрам.
+    """
     try:
         mode = request.args.get("mode")
-        if mode == "status":
+        if mode == "status": # Подсчет служебных записок по статусам исполения 
             response = count_memo_by_status()
-        elif mode == "executor":
+        elif mode == "executor": # Подсчет служебных записок по исполнителям
             response = count_memo_by_executor()
         else:
             response = {"msg": "Please chose a mode like a param. Use '?mode=status' or '?mode=executor'."}
@@ -572,4 +619,27 @@ def set_kanban():
         
         return jsonify({"STATUS": "Ok"}), 200
     except Exception as ex:
+        return jsonify({"STATUS": "Error", "message": str(ex)}), 500
+
+
+@app.route('/set_contract_type', methods=['POST'])
+def set_contract_type():
+    try:
+        contract_type = request.args.get("type")
+        ids = request.get_json()  # Получаем список ID из тела запроса
+
+        if not contract_type or not ids:
+            return jsonify({"STATUS": "Error", "message": "Missing required parameters"}), 400
+
+        # Обновляем записи в таблице description
+        db.session.query(Description).filter(Description.id.in_(ids)).update(
+            {"contract_type": contract_type}, synchronize_session=False
+        )
+
+        db.session.commit()  # Фиксируем изменения
+
+        return jsonify({"STATUS": "Success"}), 200
+
+    except Exception as ex:
+        db.session.rollback()  # Откатываем транзакцию в случае ошибки
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500

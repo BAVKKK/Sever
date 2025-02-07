@@ -8,7 +8,7 @@ from Sever import app, db, log_request
 from Sever.models import *
 from Sever.db.utils import save_file
 from sqlalchemy import func
-
+from Sever.constants import *
 
 
 def fill_zeros(number):
@@ -49,7 +49,7 @@ def create_his(desc_id, sop_id):
 def add_description(memo_id, data):
     try:
         # Пока не удаляем из-за дат статусов
-        # Удаляем все существующие записи к конкретной заявке
+        # (Удаляем все существующие записи к конкретной заявке)
 
         # Description.query.filter_by(memo_id=memo_id).delete()
         # db.session.commit()
@@ -58,6 +58,7 @@ def add_description(memo_id, data):
         for disc in data:
             date_of_delivery = None
             executor_id = None
+            contract_type = None
 
             if disc.get("DATE_OF_DELIVERY"):
                 try:
@@ -66,6 +67,12 @@ def add_description(memo_id, data):
                     raise ValueError(f"Invalid date format: {disc['DATE_OF_DELIVERY']}")
             if disc.get("EXECUTOR"):
                 executor_id = disc["EXECUTOR"]["ID"]
+            
+            if disc.get("CONTRACT_TYPE"):
+                contract_type = disc.get("CONTRACT_TYPE")
+                if disc.get("STATUS_CODE") and disc.get("STATUS_CODE") not in ConstantSOP.CONTRACT_RULES[contract_type]:
+                    raise ValueError("Status code not in contract rules for this contract type!")
+
             if disc.get("ID") is None or disc.get("ID") == 0:
                 new_disc = Description(
                     memo_id=memo_id,
@@ -75,7 +82,8 @@ def add_description(memo_id, data):
                     unit_id=disc.get("UNIT_CODE"),
                     status_id=disc.get("STATUS_CODE"),
                     date_of_delivery=date_of_delivery,
-                    id_of_executor = executor_id
+                    id_of_executor = executor_id,
+                    contract_type = disc.get("CONTRACT_TYPE")
                 )
                 add_commit(new_disc)
 
@@ -95,6 +103,7 @@ def add_description(memo_id, data):
                 old_disc.status_id = disc.get("STATUS_CODE")
                 old_disc.date_of_delivery = date_of_delivery
                 old_disc.id_of_executor = executor_id
+                old_disc.contract_type = disc.get("CONTRACT_TYPE")
                 db.session.add(old_disc)
 
                 his = HistoryOfchangingSOP.query.filter_by(description_id = disc.get("ID")).first()
@@ -129,7 +138,7 @@ def add_memo(data):
         memo.info = data["INFO"]
         # Пока не работает, т.к. всегда ответственный начальник 13 отдела, а именно 7
         #memo.id_of_executor = data["EXECUTOR"]["ID"] if data["EXECUTOR"]["ID"] is not None and data["EXECUTOR"]["ID"] != 0 else None
-        memo.id_of_executor = Users.query.filter_by(role_id = 2).first().id # Подставляем актуальное ID руководителя 13 отдела
+        memo.id_of_executor = Users.query.filter_by(role_id = ConstantRolesID.MTO_CHEF_ID).first().id # Подставляем актуальное ID руководителя 13 отдела
         memo.date_of_appointment = date_of_appointment
 
         memo.description = data["JUSTIFICATION"]
@@ -183,6 +192,7 @@ def description_for_memo_form(descriptions):
             "COEF": status.coef if status else 0,
             "CONTRACT_INFO": desc.contract_info if desc.contract_info else "",
             "DATE_OF_DELIVERY": desc.date_of_delivery.strftime("%Y-%m-%d") if desc.date_of_delivery else "",
+            "CONTRACT_TYPE": desc.contract_type if desc.contract_type else "",
             "EXECUTOR": {
                 "ID": executor_desc.id if executor_desc else 0,
                 "SURNAME": executor_desc.surname if executor_desc else "",
@@ -329,16 +339,16 @@ def count_memo_by_executor():
             return jsonify({"STATUS": "Success", "message": "No data found"}), 200
 
         # Формирование результата
-        response = {}
+        response = {} 
+        current_mto_chef_id = Users.query.filter_by(role_id = ConstantRolesID.MTO_CHEF_ID).first().id
         for row in combined_counts:
-            if row["total_count"] != 0 and row["executor_id"] != 7:
+            if row["total_count"] != 0 and row["executor_id"] != current_mto_chef_id:
                 response[str(row["executor_id"])] ={
                         "SURNAME": row["surname"],
                         "NAME": row["name"],
                         "PATRONYMIC": row["patronymic"],
                         "COUNT": row["total_count"]
                     }
-
         return response
     except Exception as ex:
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500

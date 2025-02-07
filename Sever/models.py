@@ -28,6 +28,7 @@ class StatusOfPurchase(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(36), nullable=True)
     coef = db.Column(db.Float, nullable=True)
+    coef2 = db.Column(db.Float, nullable=True)
 
 class Units(db.Model):
     __tablename__ = 'units'
@@ -77,6 +78,7 @@ class Description(db.Model):
     contract_info = db.Column(db.String, nullable=True)
     date_of_delivery = db.Column(db.DateTime, nullable=True)
     id_of_executor = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=True)
+    contract_type = db.Column(db.Integer, nullable=True)
 
 class HistoryOfchangingSOP(db.Model):
     __tablename__ = 'history_of_changing_sop'

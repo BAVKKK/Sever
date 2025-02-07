@@ -12,15 +12,26 @@ class ConstantRolesID():
 
 class ConstantSOP():
     """
-    Класс для ID статусов закупок используемых в коде
+    Класс для статусов закупок используемых в коде
     """
-    REQUEST_TKP = 1
-    REQUEST_PROCUREMENT = 2
-    APPROVAL = 3
-    PLACEMENT_OF_PROCUREMENT = 4
-    SUMMING_UP = 5
-    CONTRACT_CONCLUDED = 6
-    IN_WAREHOUSE = 7
+    NOT_SETTED = 1
+    REQUEST_TKP = 2
+    REQUEST_PROCUREMENT = 3
+    APPROVAL = 4
+    PLACEMENT_OF_PROCUREMENT = 5
+    SUMMING_UP = 6
+    CONTRACT_CONCLUDED = 7
+    IN_WAREHOUSE = 8
+    PAYMENT = 9
+
+    CONTRACT_TYPE = {
+        "Contract": 1,
+        "Invoice-contract": 2
+    }
+    CONTRACT_RULES = {
+        CONTRACT_TYPE["Contract"]: [REQUEST_TKP, REQUEST_PROCUREMENT, APPROVAL, PLACEMENT_OF_PROCUREMENT, SUMMING_UP, CONTRACT_CONCLUDED, IN_WAREHOUSE],
+        CONTRACT_TYPE["Invoice-contract"]: [REQUEST_TKP, REQUEST_PROCUREMENT, PAYMENT, IN_WAREHOUSE]
+    }
 
 class ConstantSOE():
     """
@@ -33,16 +44,14 @@ class ConstantSOE():
     COMPLETED = 5
     DECLINE_BY_MTO_CHEF = 6
 
+# Словарь разрешенных статусов по ролям. Формирования словаря по правилам указанных в комментариях к ролям (смотреть БД или читать README)
 SOEForRoles = {
-    ConstantRolesID.DEPARTMENT_CHEF_ID: [1, 2, 3, 4, 5, 6],
+    ConstantRolesID.DEPARTMENT_CHEF_ID: [1, 2, 3, 4, 5, 6], 
     ConstantRolesID.MTO_CHEF_ID: [2, 4, 5, 6],
     ConstantRolesID.COMPANY_LEAD_ID: [2, 4, 5, 6],
     ConstantRolesID.EMPLOYEE_ID : [1, 2, 3, 4, 5, 6],
     ConstantRolesID.MTO_EMPLOYEE_ID : [2, 4, 5, 6]
 }
-
-
-
 
 
 
