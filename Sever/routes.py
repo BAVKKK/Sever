@@ -3,7 +3,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from flask_jwt_extended import get_jwt
 from sqlalchemy import text, func, or_
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, aliased
 from collections import namedtuple, defaultdict
 import requests
 import json
@@ -71,10 +71,15 @@ def apply_reestr_filters(query, filters):
             query = query.filter(Memo.info.ilike(f"%{filt}%"))
         if 'ITEM_NAME' in filters:
             filt = filters["ITEM_NAME"]
-            query = query.join(Description).filter(Description.name.ilike(f"%{filt}%"))
+            # Создаем алиас для таблицы Description на случай, если её уже джоинили
+            desc_as = aliased(Description)
+            query = query.join(desc_as).filter(desc_as.name.ilike(f"%{filt}%"))
         if 'EXECUTOR_NAME' in filters:
             filt = filters["EXECUTOR_NAME"]
-            query = query.join(Description).join(Employees) \
+            # Создаем алиас для второй таблицы Description
+            desc_alias = aliased(Description)
+            query = query.join(desc_alias, desc_alias.memo_id == Memo.id) \
+                         .join(Employees, Employees.id == desc_alias.id_of_executor) \
                          .filter(
                              or_(
                                  Employees.name.ilike(f"%{filt}%"),
@@ -120,13 +125,13 @@ def get_reestr():
         elif role_id in [ConstantRolesID.MTO_CHEF_ID, ConstantRolesID.COMPANY_LEAD_ID]: # Пока на эти роли нет никакой особой логике, но если убрать поймаем 403
             pass
         elif role_id == ConstantRolesID.EMPLOYEE_ID:  # Если пользователь сотрудник
-            # Получаем заявки, где user.id либо в id_executor, либо в id_creator
+            # Получаем заявки, где user.id в id_creator
             query = query.filter(
-                (Memo.id_of_executor == user_id) | (Memo.id_of_creator == user_id)
+                (Memo.id_of_creator == user_id)
             )
         elif role_id == ConstantRolesID.MTO_EMPLOYEE_ID:  # Если пользователь сотрудник отдела МТО
             # Получаем только те заявки, где пользователь указан в id_executor
-            query = query.filter(Memo.id_of_executor == user_id)
+            query = query.join(Description, Description.memo_id == Memo.id).filter(Description.id_of_executor == user_id)
         else:
             return jsonify({"msg": "Unauthorized role"}), 403
 
@@ -664,31 +669,36 @@ def create_checklist():
             if cl is None:
                 return jsonify({"STATUS": "Error", "message": f"Checklist with ID {cl_id} does not exist"}), 400
 
+            # Если чеклист существует, удаляем все записи из ChecklistData для этого чеклиста
+            ChecklistData.query.filter_by(checklist_id=cl_id).delete()
+
         # Проверка наличия VALUES
         values = json_data.get("VALUES", [])
         if not values:
-            return jsonify({"STATUS": "Error", "message": "VALUES list is empty"}), 400
+            Checklist.query.filter_by(id=cl_id).delete()
+            db.session.commit()
+            return jsonify({"STATUS": "Warning", "message": "VALUES list is empty. Checklist has deleted."}), 200
 
         # Оптимизированная проверка Description
-        desc_ids = [i["ID"] for i in values]
+        desc_ids = [i.get("ID") for i in values]
         existing_descs = {desc.id for desc in Description.query.filter(Description.id.in_(desc_ids)).all()}
 
         for i in values:
-            if i["ID"] not in existing_descs:
-                raise DescError(f"""Description with ID {i["ID"]} does not exist""")
-            cld = ChecklistData.query.filter_by(description_id = i["ID"]).first()
+            id = i.get("ID")
+            if id not in existing_descs:
+                raise DescError(f"""Description with ID {id} does not exist""")
+            cld = ChecklistData.query.filter_by(description_id=id).first()
             if cld is not None and cld.checklist_id != cl_id:
-                raise DescError(f"""Description with ID {i["ID"]} is already in ChecklistData""")
-            elif cld is not None and cld.checklist_id == cl_id:
-                pass
-            else:
+                raise DescError(f"""Description with ID {id} is already in ChecklistData""")
+            elif cld is None:  # Если запись не найдена, создаем новую
                 new_checklist_data = ChecklistData(
                     checklist_id=cl_id,
-                    description_id=i["ID"]
+                    description_id=id
                 )
                 db.session.add(new_checklist_data)
+
         db.session.commit()
-        return jsonify({"STATUS": "Success"}), 200
+        return jsonify({"STATUS": "Success", "ID": cl_id}), 200
 
     except DescError as ex:
         # Удаление чеклиста и связанных данных при ошибке
@@ -700,7 +710,6 @@ def create_checklist():
     except Exception as ex:
         db.session.rollback()  # Откатываем транзакцию в случае ошибки
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500
-
 
 @app.route('/get_checklist', methods=['GET'])
 @jwt_required()
@@ -758,6 +767,44 @@ def get_checklist():
         return Response(json_response, content_type='application/json; charset=utf-8')
 
     except Exception as ex:
+        return jsonify({"STATUS": "Error", "message": str(ex)}), 500
+
+@app.route('/delete_checklist', methods=['DELETE'])
+def delete_checklist():
+    try:
+        cl_id = request.args.get("id")
+        
+        if not cl_id:
+            return jsonify({"msg": "Checklist id is missing"}), 400
+
+        # Выполняем запрос для получения данных
+        cld = db.session.query(
+            ChecklistData.id,
+            Description.status_id,
+            Description.contract_type
+        ).join(
+            Description, Description.id == ChecklistData.description_id
+        ).filter(
+            ChecklistData.checklist_id == cl_id
+        ).first()
+
+        if cld:
+            if cld.status_id == ConstantSOP.NOT_SETTED or \
+               cld.status_id in ConstantSOP.CONTRACT_RULES[cld.contract_type] and \
+               cld.status_id == ConstantSOP.CONTRACT_RULES[cld.contract_type][0]:
+                # Удаляем данные
+                ChecklistData.query.filter_by(checklist_id=cl_id).delete()
+                Checklist.query.filter_by(id=cl_id).delete()
+                db.session.commit()
+                return jsonify({"msg": "Checklist deleted successfully"}), 200
+            else:
+                return jsonify({"msg": "Pozdnyak metatsya"}), 200
+        else:
+            return jsonify({"msg": "Checklist not found"}), 404
+            
+    except Exception as ex:
+        db.session.rollback()
+        app.logger.error(f"Error deleting checklist with id {cl_id}: {str(ex)}")
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500
 
 
