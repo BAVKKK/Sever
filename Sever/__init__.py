@@ -7,6 +7,8 @@ import functools
 import datetime
 import logging
 
+from Sever.configs.flask import SECRET_KEY, JWT_SECRET_KEY, SQLALCHEMY_DATABASE_URI
+
 
 def configure_logging(app):
     # Настройки логирования приложения
@@ -32,9 +34,9 @@ def log_request(func):
     return decorated_function
 
 app = Flask(__name__)
-app.secret_key = '+91yyrL/v/+P45IPhHl7ACgQfD24enrXij0uUJRVucU='
-app.config['JWT_SECRET_KEY'] = '654531c5ee6550c5bd6947b75bb25e4efe10d947a8d9520f1fa02ea7133fffd2'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://dba:24082001@localhost/sever'
+app.secret_key = SECRET_KEY
+app.config['JWT_SECRET_KEY'] = JWT_SECRET_KEY
+app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JSON_AS_ASCII'] = False  # Отключает ASCII-кодирование
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True  # Делает вывод более читабельным

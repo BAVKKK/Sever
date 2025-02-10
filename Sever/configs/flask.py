@@ -1,0 +1,3 @@
+SECRET_KEY = '+91yyrL/v/+P45IPhHl7ACgQfD24enrXij0uUJRVucU='
+JWT_SECRET_KEY = '654531c5ee6550c5bd6947b75bb25e4efe10d947a8d9520f1fa02ea7133fffd2'
+SQLALCHEMY_DATABASE_URI = 'postgresql://dba:24082001@localhost/sever'
