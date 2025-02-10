@@ -6,10 +6,13 @@ import json
 
 from Sever import app, db, log_request
 from Sever.models import *
-from Sever.db.utils import save_file
+from Sever.db.minio_lib import *
+from Sever.db.utils import *
 from sqlalchemy import func
 from Sever.constants import *
 
+class DescError(Exception):
+    pass
 
 def fill_zeros(number):
     if not isinstance(number, int):
@@ -68,8 +71,8 @@ def add_description(memo_id, data):
             if disc.get("EXECUTOR"):
                 executor_id = disc["EXECUTOR"]["ID"]
             
-            if disc.get("CONTRACT_TYPE"):
-                contract_type = disc.get("CONTRACT_TYPE")
+            if disc.get("CONTRACT_TYPE") and disc.get("CONTRACT_TYPE") != "":
+                contract_type = disc.get("CONTRACT_TYPE") if disc.get("CONTRACT_TYPE") not in ["", None] else None
                 if disc.get("STATUS_CODE") and disc.get("STATUS_CODE") not in ConstantSOP.CONTRACT_RULES[contract_type]:
                     raise ValueError("Status code not in contract rules for this contract type!")
 
@@ -82,8 +85,7 @@ def add_description(memo_id, data):
                     unit_id=disc.get("UNIT_CODE"),
                     status_id=disc.get("STATUS_CODE"),
                     date_of_delivery=date_of_delivery,
-                    id_of_executor = executor_id,
-                    contract_type = disc.get("CONTRACT_TYPE")
+                    id_of_executor = executor_id
                 )
                 add_commit(new_disc)
 
@@ -103,7 +105,7 @@ def add_description(memo_id, data):
                 old_disc.status_id = disc.get("STATUS_CODE")
                 old_disc.date_of_delivery = date_of_delivery
                 old_disc.id_of_executor = executor_id
-                old_disc.contract_type = disc.get("CONTRACT_TYPE")
+                old_disc.contract_type = contract_type
                 db.session.add(old_disc)
 
                 his = HistoryOfchangingSOP.query.filter_by(description_id = disc.get("ID")).first()
@@ -114,6 +116,7 @@ def add_description(memo_id, data):
     
     except Exception as ex:
         db.session.rollback()
+        current_app.logger.error(ex)
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500
 
 @log_request
@@ -190,7 +193,6 @@ def description_for_memo_form(descriptions):
             "STATUS_CODE": status.id if status else 0,
             "STATUS_TEXT": status.name if status else "",
             "COEF": status.coef if status else 0,
-            "CONTRACT_INFO": desc.contract_info if desc.contract_info else "",
             "DATE_OF_DELIVERY": desc.date_of_delivery.strftime("%Y-%m-%d") if desc.date_of_delivery else "",
             "CONTRACT_TYPE": desc.contract_type if desc.contract_type else "",
             "EXECUTOR": {
@@ -352,3 +354,14 @@ def count_memo_by_executor():
         return response
     except Exception as ex:
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500
+
+def db_create_checklist():
+    try:
+        new_cl = Checklist(
+            date_of_creation = dt.now()
+        )
+        add_commit(new_cl)
+        return new_cl.id
+    except Exception as ex:
+        raise CreateError(f"{ex}")
+

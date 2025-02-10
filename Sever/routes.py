@@ -22,6 +22,7 @@ from Sever.constants import *
 # Исправить add_description
 # Подумать над костылем в add_memo
 
+# Добавить удаление мемо при ошибке в дескрипшен
 
 @app.route('/', methods=['GET', 'POST'])
 def main():
@@ -389,11 +390,13 @@ def next_sop(current_sop, type):
     try:
         if type is None:
             type = ConstantSOP.CONTRACT_TYPE["Contract"] # По умолчанию установим тип договора как обычный договор
-        if ConstantSOP.CONTRACT_RULES[type].index(current_sop) + 1 < len(ConstantSOP.CONTRACT_RULES[type]):
+        if current_sop == ConstantSOP.NOT_SETTED:
+            next_value = ConstantSOP.CONTRACT_RULES[type][0]         
+        elif ConstantSOP.CONTRACT_RULES[type].index(current_sop) + 1 < len(ConstantSOP.CONTRACT_RULES[type]):
             next_value = ConstantSOP.CONTRACT_RULES[type][ConstantSOP.CONTRACT_RULES[type].index(current_sop) + 1]
-            return next_value
         else:
             raise ValueError("Status not setted. Last value yet.")
+        return next_value
     except Exception as ex:
         raise ValueError(f"{ex}")
 
@@ -411,7 +414,7 @@ def set_sop():
         else:
             return jsonify({"STATUS": "Error", "message": "The \'id\' argument is not set"}), 400
     except ValueError as ve:
-        return jsonify({"STATUS": "Error", "message": str(ex)}), 400
+        return jsonify({"STATUS": "Error", "message": str(ve)}), 400
     except Exception as ex:
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500
 
@@ -441,12 +444,22 @@ def aggregate_description_data():
         ).join(Units, Description.unit_id == Units.id)
         query_aggregated = query_aggregated.join(Memo, Description.memo_id == Memo.id)
 
+        # Второй запрос: детали (без группировки)
+        query_details = db.session.query(
+            Description.id,
+            Description.memo_id,
+            Description.name,
+            Description.count
+        )
+
         if status is not None:
-            count = db.session.query(func.count(Memo.status_id)).scalar()
+            count = db.session.query(func.count(StatusOfPurchase.id)).scalar()
             if int(status) > 0 and int(status) <= count:
                 query_aggregated = query_aggregated.filter(Description.status_id == status)
+                query_details = query_details.filter(Description.status_id == status)
             else:
                 return jsonify({"STATUS": "Error", "message": "Unknown status"}), 400
+        
 
         query_aggregated = query_aggregated.group_by(
             Description.memo_id,
@@ -460,7 +473,6 @@ def aggregate_description_data():
         # Фильтрация по ролям
         if role_id == ConstantRolesID.MTO_CHEF_ID:
             allowed_statuses = SOEForRoles.get(ConstantRolesID.MTO_CHEF_ID, [])
-            print(allowed_statuses)
             query_aggregated = query_aggregated.filter(Memo.status_id.in_(allowed_statuses))
         elif role_id == ConstantRolesID.MTO_EMPLOYEE_ID:
             query_aggregated = query_aggregated.filter(Description.id_of_executor == user_id) # Здесь статусы не проверяются, т.к. если исполнитель назначен, то статус уже должен быть не ниже уровня Зарегестрировано
@@ -468,14 +480,6 @@ def aggregate_description_data():
             return jsonify({"STATUS": "Error", "message": "Unauthorized role"}), 403
 
         aggregated_data = query_aggregated.all()
-
-        # Второй запрос: детали (без группировки)
-        query_details = db.session.query(
-            Description.id,
-            Description.memo_id,
-            Description.name,
-            Description.count
-        ).filter(Description.status_id == status)
 
         details_data = query_details.all()
 
@@ -643,3 +647,108 @@ def set_contract_type():
     except Exception as ex:
         db.session.rollback()  # Откатываем транзакцию в случае ошибки
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500
+
+
+@app.route('/create_checklist', methods=['POST'])
+def create_checklist():
+    try:
+        json_data = request.get_json()  # {"CHECKLIST_ID": 1, "VALUES": [{"ID": 1}]}
+
+        # Проверка, есть ли CHECKLIST_ID и корректный ли он
+        cl_id = json_data.get("CHECKLIST_ID", 0)
+
+        if cl_id == 0:
+            cl_id = db_create_checklist()
+        else:
+            cl = Checklist.query.filter_by(id=cl_id).first()
+            if cl is None:
+                return jsonify({"STATUS": "Error", "message": f"Checklist with ID {cl_id} does not exist"}), 400
+
+        # Проверка наличия VALUES
+        values = json_data.get("VALUES", [])
+        if not values:
+            return jsonify({"STATUS": "Error", "message": "VALUES list is empty"}), 400
+
+        # Оптимизированная проверка Description
+        desc_ids = [i["ID"] for i in values]
+        existing_descs = {desc.id for desc in Description.query.filter(Description.id.in_(desc_ids)).all()}
+
+        for i in values:
+            if i["ID"] not in existing_descs:
+                raise DescError(f"""Description with ID {i["ID"]} does not exist""")
+            cld = ChecklistData.query.filter_by(description_id = i["ID"]).first()
+            if cld is not None and cld.checklist_id != cl_id:
+                raise DescError(f"""Description with ID {i["ID"]} is already in ChecklistData""")
+            elif cld is not None and cld.checklist_id == cl_id:
+                pass
+            else:
+                new_checklist_data = ChecklistData(
+                    checklist_id=cl_id,
+                    description_id=i["ID"]
+                )
+                db.session.add(new_checklist_data)
+        db.session.commit()
+        return jsonify({"STATUS": "Success"}), 200
+
+    except DescError as ex:
+        # Удаление чеклиста и связанных данных при ошибке
+        ChecklistData.query.filter_by(checklist_id=cl_id).delete()
+        Checklist.query.filter_by(id=cl_id).delete()
+        db.session.commit()
+        return jsonify({"STATUS": "Error", "message": str(ex)}), 400
+
+    except Exception as ex:
+        db.session.rollback()  # Откатываем транзакцию в случае ошибки
+        return jsonify({"STATUS": "Error", "message": str(ex)}), 500
+
+
+@app.route('/get_checklist', methods=['GET'])
+@jwt_required()
+def get_checklist():
+    try:
+        claims = get_jwt()
+        user_id = claims.get("id")  
+
+        # Запрос в базу данных
+        query_result = db.session.query(
+            ChecklistData.checklist_id,
+            Description.id,
+            Description.name,
+            Description.memo_id,
+            Description.count,
+            Units.short_name,
+            Units.full_name
+        ).join(Checklist, Checklist.id == ChecklistData.checklist_id
+        ).join(Description, Description.id == ChecklistData.description_id
+        ).join(Units, Units.id == Description.unit_id
+        ).filter(Description.id_of_executor == user_id).all()
+
+        # Группируем данные по CHECKLIST_ID
+        checklist_data = {}
+        for checklist_id, description_id, description_name, memo_id, count, unit_short_name, unit_full_name in query_result:
+            if checklist_id not in checklist_data:
+                checklist_data[checklist_id] = []
+            
+            checklist_data[checklist_id].append({
+                "ID": description_id,
+                "NAME": description_name,
+                "MEMO_ID": memo_id,
+                "COUNT": count,
+                "UNIT_SHORT_NAME": unit_short_name,
+                "UNIT_FULL_NAME": unit_full_name,
+            })
+
+        # Формируем список всех чек-листов
+        response = [
+            {"CHECKLIST_ID": cl_id, "VALUES": values}
+            for cl_id, values in checklist_data.items()
+        ]
+
+        json_response = json.dumps(response, ensure_ascii=False, indent=4)
+        return Response(json_response, content_type='application/json; charset=utf-8')
+
+    except Exception as ex:
+        return jsonify({"STATUS": "Error", "message": str(ex)}), 500
+
+
+

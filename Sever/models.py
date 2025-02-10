@@ -75,7 +75,6 @@ class Description(db.Model):
     count = db.Column(db.Integer, nullable=True)
     unit_id = db.Column(db.Integer, db.ForeignKey('units.id'), nullable=True)
     status_id = db.Column(db.Integer, db.ForeignKey('status_of_purchase.id'), nullable=True)
-    contract_info = db.Column(db.String, nullable=True)
     date_of_delivery = db.Column(db.DateTime, nullable=True)
     id_of_executor = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=True)
     contract_type = db.Column(db.Integer, nullable=True)
@@ -109,3 +108,14 @@ class Kanban(db.Model):
     info = db.Column(db.String, nullable=True)
 
     kanban_column = db.relationship('KanbanColumn', backref='kanbans')
+
+class Checklist(db.Model):
+    __tablename__ = 'checklist'
+    id = db.Column(db.Integer, primary_key=True)
+    date_of_creation = db.Column(db.DateTime, nullable=True)
+
+class ChecklistData(db.Model):
+    __tablename__ = 'checklist_data'
+    id = db.Column(db.Integer, primary_key=True)
+    checklist_id = db.Column(db.Integer, db.ForeignKey('checklist.id'), nullable=True)
+    description_id = db.Column(db.Integer, db.ForeignKey('description.id'), nullable=True)

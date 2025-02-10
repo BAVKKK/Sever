@@ -1,5 +1,5 @@
 ####
-GET http://127.0.0.1:8000/form_memo?id=0004
+GET http://127.0.0.1:8000/form_memo?id=0072
 Accept: application/application/json
 
 ####
@@ -8,15 +8,15 @@ Accept: application/json
 Content-Type: application/json
 
 {
-  "ID_MEMO": "0004",
+  "ID_MEMO": 0,
   "DATE_OF_CREATION": "2024-10-27",
   "DATE_OF_APPOINTMENT": "2025-01-15",
-  "STATUS_CODE": 4,
+  "STATUS_CODE": 1,
   "STATUS_TEXT": "Исполнение",
-  "INFO": "Проверка 3",
+  "INFO": "ААААА",
   "JUSTIFICATION": "Описание для описаний",
-  "HEAD_COMMENT": "Проверка согласования",
-  "EXECUTOR_COMMENT": "вапвап",
+  "HEAD_COMMENT": "",
+  "EXECUTOR_COMMENT": "",
   "CREATOR": {
     "ID": 4,
     "SURNAME": "Петрова",
@@ -35,18 +35,18 @@ Content-Type: application/json
   },
   "DESCRIPTION": [
     {
-      "ID": 22,
-      "POSITION": 3,
-      "NAME": "Скотч",
-      "COUNT": 12,
+      "ID": 0,
+      "POSITION": 1,
+      "NAME": "Унитаз",
+      "COUNT": 1,
       "UNIT_CODE": 6,
       "UNIT_TEXT": "ШТ",
-      "STATUS_CODE": 8,
-      "STATUS_TEXT": "Оплата",
+      "STATUS_CODE": 1,
+      "STATUS_TEXT": "",
       "COEF": null,
       "CONTRACT_INFO": "",
-      "DATE_OF_DELIVERY": "2025-01-18",
-      "CONTRACT_TYPE": 1,
+      "DATE_OF_DELIVERY": "2025-12-12",
+      "CONTRACT_TYPE": "",
       "EXECUTOR": {
         "ID": 11,
         "SURNAME": "Новиков",
@@ -56,82 +56,7 @@ Content-Type: application/json
         "PHONE": "+7987-564-32-15",
         "EMAIL": "test51@mail.ru"
       },
-      "HISTORY": [
-        {
-          "STATUS_ID": 1,
-          "DATE": "2025-01-13"
-        },
-        {
-          "STATUS_ID": 2,
-          "DATE": "2025-01-13"
-        },
-        {
-          "STATUS_ID": 8,
-          "DATE": "2025-02-04"
-        }
-      ]
-    },
-    {
-      "ID": 20,
-      "POSITION": 1,
-      "NAME": "Бумага",
-      "COUNT": 30,
-      "UNIT_CODE": 7,
-      "UNIT_TEXT": "Пачка",
-      "STATUS_CODE": 2,
-      "STATUS_TEXT": "Заявка на проведения закупки",
-      "COEF": 0.15,
-      "CONTRACT_INFO": "",
-      "DATE_OF_DELIVERY": "2025-01-08",
-      "CONTRACT_TYPE": 2,
-      "EXECUTOR": {
-        "ID": 5,
-        "SURNAME": "Смирнов",
-        "NAME": "Дмитрий",
-        "PATRONYMIC": "Николаевич",
-        "DEPARTMENT": "Отдел 13",
-        "PHONE": "+7987-564-32-15",
-        "EMAIL": "test5@mail.ru"
-      },
-      "HISTORY": [
-        {
-          "STATUS_ID": 1,
-          "DATE": "2025-01-13"
-        },
-        {
-          "STATUS_ID": 2,
-          "DATE": "2025-01-13"
-        }
-      ]
-    },
-    {
-      "ID": 21,
-      "POSITION": 2,
-      "NAME": "Клей",
-      "COUNT": 5,
-      "UNIT_CODE": 6,
-      "UNIT_TEXT": "ШТ",
-      "STATUS_CODE": 1,
-      "STATUS_TEXT": "Запрос ТКП",
-      "COEF": 0.1,
-      "CONTRACT_INFO": "",
-      "DATE_OF_DELIVERY": "2025-01-13",
-      "CONTRACT_TYPE": 2,
-      "EXECUTOR": {
-        "ID": 10,
-        "SURNAME": "Соколова",
-        "NAME": "Екатерина",
-        "PATRONYMIC": "Владимировна",
-        "DEPARTMENT": "Отдел 13",
-        "PHONE": "+7987-564-32-17",
-        "EMAIL": "test52@mail.ru"
-      },
-      "HISTORY": [
-        {
-          "STATUS_ID": 1,
-          "DATE": "2025-01-13"
-        }
-      ]
+      "HISTORY": []
     }
   ],
   "JUSTIFICATION_FILE": {
@@ -147,7 +72,7 @@ Accept: application/json
 Content-Type: application/json
 
 {
-  "ID_MEMO": "0044",
+  "ID_MEMO": 0,
   "DATE_OF_CREATION": "2025-01-20",
   "DATE_OF_APPOINTMENT": "2025-01-10",
   "STATUS_CODE": 1,
@@ -174,7 +99,7 @@ Content-Type: application/json
   },
   "DESCRIPTION": [
     {
-      "ID": 98,
+      "ID": 0,
       "POSITION": 2,
       "NAME": "Соль",
       "COUNT": 15,
@@ -185,7 +110,7 @@ Content-Type: application/json
       "COEF": 0.1,
       "CONTRACT_INFO": "",
       "DATE_OF_DELIVERY": "2025-01-17",
-      "CONTRACT_TYPE": 1,
+      "CONTRACT_TYPE": "",
       "EXECUTOR": {
         "ID": 10,
         "SURNAME": "Соколова",
@@ -203,7 +128,7 @@ Content-Type: application/json
       ]
     },
     {
-      "ID": 99,
+      "ID": 0,
       "POSITION": 3,
       "NAME": "Мука",
       "COUNT": 25,
@@ -212,7 +137,8 @@ Content-Type: application/json
       "STATUS_CODE": 1,
       "STATUS_TEXT": "Запрос ТКП",
       "COEF": 0.1,
-      "CONTRACT_INFO": "",Н
+      "CONTRACT_INFO": "",
+      "CONTRACT_TYPE": "",
       "DATE_OF_DELIVERY": "2025-01-22",
       "EXECUTOR": {
         "ID": 10,
@@ -241,6 +167,7 @@ Content-Type: application/json
       "STATUS_TEXT": "Запрос ТКП",
       "COEF": 0.1,
       "CONTRACT_INFO": "",
+      "CONTRACT_TYPE": "",
       "DATE_OF_DELIVERY": "2025-01-12",
       "EXECUTOR": {
         "ID": 10,
@@ -294,7 +221,7 @@ Accept: application/json
 Content-Type: application/json
 
 {
-  "LOGIN": "test2",
+  "LOGIN": "test52",
   "PASSWORD": "abcd1234"
 }
 
@@ -317,7 +244,7 @@ Accept: application/application/json
 
 
 ###
-POST http://127.0.0.1:8000/set_sop?id=21
+POST http://127.0.0.1:8000/set_sop?id=98
 Accept: application/json
 Content-Type: application/json
 
@@ -343,7 +270,7 @@ GET http://127.0.0.1:8000/count_memo?mode=status
 Accept: application/application/json
 
 ###
-GET http://127.0.0.1:8000/get_aggregate?status=2
+GET http://127.0.0.1:8000/get_aggregate
 Accept: application/application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczODkxNzU3NiwianRpIjoiMzQ3Nzk3YTgtNjUzYS00M2E0LTkxODYtZjFmZGIyZTc3Zjc0IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QyIiwibmJmIjoxNzM4OTE3NTc2LCJjc3JmIjoiNGQwZTU5YzktYjU1ZS00Y2YzLWJlNzgtZTBhNTM1NzNkZGE1IiwiZXhwIjoxNzM5MDAzOTc2LCJyb2xlX2lkIjoyLCJpZCI6N30.CTWsPfxXlSDbEWAz4sjqj8WrunkPP7lliJka4QbZ79Q
 
@@ -369,3 +296,27 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsI
 }
 ]
 
+###
+POST http://127.0.0.1:8000/create_checklist
+Accept: application/application/json
+Content-Type: application/json
+
+{
+  "CHECKLIST_ID": 0,
+  "VALUES": [
+    {
+      "ID": 91
+    },
+    {
+      "ID": 92
+    },
+    {
+      "ID": 97
+    }
+    ]
+}
+
+###
+GET http://127.0.0.1:8000/get_checklist
+Accept: application/application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczOTA5NDk0MCwianRpIjoiY2FjNmU5MjAtZDBiZC00ODZiLThjMTUtNmVlMzY3NjY1YWNkIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3Q1MiIsIm5iZiI6MTczOTA5NDk0MCwiY3NyZiI6IjVlYjZhNDBmLTZjMmItNGIxNC1iNTc2LTI3Yzc1N2NhY2FiMSIsImV4cCI6MTczOTE4MTM0MCwicm9sZV9pZCI6NSwiaWQiOjEwfQ.I2p6Z2PAijZxaOkCSOP6dqwhY2C-El7Sfa02LILjNYk

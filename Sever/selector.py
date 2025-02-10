@@ -71,8 +71,6 @@ def get_sop_list():
     except Exception as ex:
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500
 
-
-
 def get_soe_list():
     try:
         responce = []
