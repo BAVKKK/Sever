@@ -1,7 +1,7 @@
 """Функции для получения селекторов"""
 from flask import jsonify, Response
 import json
-from Sever import app, db
+from Sever import db
 from Sever.models import *
 from Sever.constants import *
 

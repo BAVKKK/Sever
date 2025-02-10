@@ -1,7 +1,7 @@
 from flask import jsonify
 import base64
 import io
-from Sever.db import minio_lib
+from Sever.database import minio_lib
 
 
 def from_b64str_to_minio(mime_types: dict,

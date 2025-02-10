@@ -26,9 +26,11 @@ class ConstantSOP():
 
     CONTRACT_TYPE = {
         "Contract": 1,
-        "Invoice-contract": 2
+        "Invoice-contract": 2,
+        "Not setted": None
     }
     CONTRACT_TYPE_REVERSE = {
+        None: "Не установлен",
         1: "Договор",
         2: "Счет-договор"
     }
@@ -54,7 +56,7 @@ SOEForRoles = {
     ConstantRolesID.MTO_CHEF_ID: [2, 4, 5, 6],
     ConstantRolesID.COMPANY_LEAD_ID: [2, 4, 5, 6],
     ConstantRolesID.EMPLOYEE_ID : [1, 2, 3, 4, 5, 6],
-    ConstantRolesID.MTO_EMPLOYEE_ID : [2, 4, 5, 6]
+    ConstantRolesID.MTO_EMPLOYEE_ID : [4,5]
 }
 
 

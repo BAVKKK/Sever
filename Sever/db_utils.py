@@ -4,10 +4,11 @@ from datetime import datetime as dt
 
 import json
 
-from Sever import app, db, log_request
+from Sever.utils import log_request, add_commit
+from Sever.extensions import db
 from Sever.models import *
-from Sever.db.minio_lib import *
-from Sever.db.utils import *
+from Sever.database.minio_lib import *
+from Sever.database.utils import *
 from sqlalchemy import func
 from Sever.constants import *
 
@@ -28,13 +29,6 @@ def remove_leading_zeros(s):
     if not s.isdigit():
         raise ValueError("Only numbers can be used")
     return int(s)  # int автоматически убирает ведущие нули
-
-def add_commit(param):
-    """
-    Сокращение для SQLAlchemy
-    """
-    db.session.add(param)
-    db.session.commit()    
 
 def create_his(desc_id, sop_id):
     """

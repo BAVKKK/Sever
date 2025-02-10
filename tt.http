@@ -1,9 +1,9 @@
 ####
-GET http://127.0.0.1:8000/form_memo?id=0072
+GET http://127.0.0.1:8000/memo/form?id=0043
 Accept: application/application/json
 
 ####
-POST http://127.0.0.1:8000/form_memo
+POST http://127.0.0.1:8000/memo/form
 Accept: application/json
 Content-Type: application/json
 
@@ -67,7 +67,7 @@ Content-Type: application/json
 }
 
 ####
-POST http://127.0.0.1:8000/form_memo
+POST http://127.0.0.1:8000/memo/form
 Accept: application/json
 Content-Type: application/json
 
@@ -195,61 +195,58 @@ Content-Type: application/json
 
 
 ####
-GET http://127.0.0.1:8000/get_selectors
+GET http://127.0.0.1:8000/selector/get_all
 Accept: application/application/json
 
 ####
-GET http://127.0.0.1:8000/form_memo?id=19
+GET http://127.0.0.1:8000/memo/form?id=19
 Accept: application/application/json
 
 ###
-POST http://127.0.0.1:8000/register
+POST http://127.0.0.1:8000/auth/register
+Accept: application/json
+Content-Type: application/json
+
+{
+  "LOGIN": "test41",
+  "PASSWORD": "abcd1234",
+  "EMAIL": "test41@mail.ru",
+  "ROLE_ID": 4,
+  "PHONE": "+7987-564-32-18"
+}
+
+###
+POST http://127.0.0.1:8000/auth/login
 Accept: application/json
 Content-Type: application/json
 
 {
   "LOGIN": "test52",
-  "PASSWORD": "abcd1234",
-  "EMAIL": "test52@mail.ru",
-  "ROLE_ID": 5,
-  "PHONE": "+7987-564-32-17"
-}
-
-###
-POST http://127.0.0.1:8000/login
-Accept: application/json
-Content-Type: application/json
-
-{
-  "LOGIN": "test51",
   "PASSWORD": "abcd1234"
 }
 
-###e
-GET http://127.0.0.1:8000/get_user_info
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczMzc3NjEyNiwianRpIjoiOGY0Y2Q0YTYtMDhiNi00NjhjLWIyYzItNGRkNDY3ODdmNmJiIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QyIiwibmJmIjoxNzMzNzc2MTI2LCJjc3JmIjoiZTYxYTY1OGUtMTNjNi00NzFmLWIyMDItY2FiMjNkOTgwZDlmIiwiZXhwIjoxNzMzNzgzMzI2LCJyb2xlX2lkIjoyLCJpZCI6N30.gw3dxBQTCv8luBnsnsxsV7G0X61rU9xntPsSBTQIkGI
+###
+GET http://127.0.0.1:8000/user/get_info
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczOTIxNTg4NiwianRpIjoiYWUzNDJkNzYtMzBhOC00YjcxLWI1NzUtN2VjMTY1ZjRmODE4IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QyIiwibmJmIjoxNzM5MjE1ODg2LCJjc3JmIjoiMjczMWY1MTAtNGRjOS00YWFhLThkNmEtMDMwN2M4NjdkYjBmIiwiZXhwIjoxNzM5MzAyMjg2LCJyb2xlX2lkIjoyLCJpZCI6N30.obV5oHs4d8iMkPIN7K6gy4C0Fjij9PsWugFANiRPVDM
 
 
 ###
-GET http://127.0.0.1:8000/get_reestr?filters={"ITEM_NAME": "Ка"}
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczOTE4Njk3NiwianRpIjoiZTNmMWE2NmMtYzY3Yy00YWI1LTljOTUtMzU1NDdkMDIxZWNiIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3Q1MSIsIm5iZiI6MTczOTE4Njk3NiwiY3NyZiI6IjQ3NWYzOWNjLTAyMTEtNDJhMS1hMzA2LThlOWIzYjg4ZjcxNSIsImV4cCI6MTczOTI3MzM3Niwicm9sZV9pZCI6NSwiaWQiOjExfQ.2iEcuAEi0YWEwGwAVIc4nZEy57D1mP8eWGoaS_og_o0
-###
-GET http://127.0.0.1:8000/accept_memo?id=1&accept=1
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczODY2ODM5MiwianRpIjoiMDIyM2QwZjgtY2QzYy00YTMxLWI3NDQtMjk0NzVlOGYyNjJhIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QxIiwibmJmIjoxNzM4NjY4MzkyLCJjc3JmIjoiY2NkMDBjM2YtMWZkOS00MTU0LWJkOGQtYzM1ZGYwNmVjYjRiIiwiZXhwIjoxNzM4NzU0NzkyLCJyb2xlX2lkIjoxLCJpZCI6MX0.rupNhLxGVh6SS3KG92-OGAcb7uxFsnC67StZZv1b5Ho
-
+GET http://127.0.0.1:8000/reestr/get?status=4
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczOTIyNjA2MywianRpIjoiNGQ4Mjg1NTgtYzU1Ny00YzhkLWEzNjQtOWM1NjA4NjFhOTBjIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3Q1IiwibmJmIjoxNzM5MjI2MDYzLCJjc3JmIjoiOGIxYjdiNGUtNWJhZi00YzhhLTlhZTktMGZjYTY1ODQyN2RjIiwiZXhwIjoxNzM5MzEyNDYzLCJyb2xlX2lkIjo1LCJpZCI6NX0.QT3n2QpfuUwLV1MD0SU4EKgK_lRrEGZOA1K0SIMnsfk
 
 ###
-GET http://127.0.0.1:8000/search_memo?filters={"ITEM_NAME": "Ка"}
-Accept: application/application/json
-
+GET http://127.0.0.1:8000/memo/accept?id=1&accept=1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczOTE5NzY3MSwianRpIjoiZjk3NjQ4M2YtNjIxOC00OGM3LTlmYTctNDE1NWM3ZDYyM2VkIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QyIiwibmJmIjoxNzM5MTk3NjcxLCJjc3JmIjoiOWVhOGQ2MjUtMGVkZS00NzQxLWE3MzgtYTg4MmM3YWMyODkwIiwiZXhwIjoxNzM5Mjg0MDcxLCJyb2xlX2lkIjoyLCJpZCI6N30.FHcievb5so6k2rLbuPvjBdlh_XGcKvnMf7HlNeg2a40
 
 ###
-POST http://127.0.0.1:8000/set_sop?id=98
+POST http://127.0.0.1:8000/desc/set_sop
 Accept: application/json
 Content-Type: application/json
 
+[100]
+
 ###
-POST http://127.0.0.1:8000/set_contract_type?type=2
+POST http://127.0.0.1:8000/desc/set_contract_type?type=2
 Accept: application/json
 Content-Type: application/json
 
@@ -257,47 +254,51 @@ Content-Type: application/json
 
 
 ###
-GET http://127.0.0.1:8000/get_users?filters={"ROLE": 5, "FIO": ""}
+GET http://127.0.0.1:8000/user/get_users?filters={"FIO": }
 Accept: application/application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczNzMwNDYyMSwianRpIjoiYzZjNzQ0NDYtNDU2Ny00OWRmLWFiNjYtY2E3MjU3MzM5MDJhIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QyIiwibmJmIjoxNzM3MzA0NjIxLCJjc3JmIjoiNDgwMWU5OGItYjAwMC00YzY3LTgzNTItYzU1NjE3MTk2MzAwIiwiZXhwIjoxNzM3MzkxMDIxLCJyb2xlX2lkIjoyLCJpZCI6N30.M_dcYc4YsJ_7D0KM060iZNd3vtAbXSsWUlzX4fgflGM
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczOTE4Njk3NiwianRpIjoiZTNmMWE2NmMtYzY3Yy00YWI1LTljOTUtMzU1NDdkMDIxZWNiIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3Q1MSIsIm5iZiI6MTczOTE4Njk3NiwiY3NyZiI6IjQ3NWYzOWNjLTAyMTEtNDJhMS1hMzA2LThlOWIzYjg4ZjcxNSIsImV4cCI6MTczOTI3MzM3Niwicm9sZV9pZCI6NSwiaWQiOjExfQ.2iEcuAEi0YWEwGwAVIc4nZEy57D1mP8eWGoaS_og_o0
 
 ###
-GET http://127.0.0.1:8000/count_memo?mode=executor
-Accept: application/application/json
-
-###
-GET http://127.0.0.1:8000/count_memo?mode=status
+GET http://127.0.0.1:8000/memo/count?mode=executor
 Accept: application/application/json
 
 ###
-GET http://127.0.0.1:8000/get_aggregate
+GET http://127.0.0.1:8000/memo/count?mode=status
 Accept: application/application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczOTA5NDk0MCwianRpIjoiY2FjNmU5MjAtZDBiZC00ODZiLThjMTUtNmVlMzY3NjY1YWNkIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3Q1MiIsIm5iZiI6MTczOTA5NDk0MCwiY3NyZiI6IjVlYjZhNDBmLTZjMmItNGIxNC1iNTc2LTI3Yzc1N2NhY2FiMSIsImV4cCI6MTczOTE4MTM0MCwicm9sZV9pZCI6NSwiaWQiOjEwfQ.I2p6Z2PAijZxaOkCSOP6dqwhY2C-El7Sfa02LILjNYk
 
 ###
-GET http://127.0.0.1:8000/get_kanban
+GET http://127.0.0.1:8000/desc/get_aggregate
 Accept: application/application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczNzQwMzM2MywianRpIjoiOWViODU0MWYtNTJkMy00Y2RmLTliNGUtMmM5YmM5ZTI4MjFjIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QyIiwibmJmIjoxNzM3NDAzMzYzLCJjc3JmIjoiMzQ5Zjc3NGEtYmNiNS00MjQ5LWEzNWUtYjE5ZGNlZjY4YjU0IiwiZXhwIjoxNzM3NDg5NzYzLCJyb2xlX2lkIjoyLCJpZCI6N30.PKOvUU-KDECFbnjmKtozdAO3HITNTn8Xf_xcTtKGrP8
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczOTIyMzQ0NSwianRpIjoiNjBkMmQwMzgtZDZjMC00OWJhLWE5YjUtZTQ4NTNkMzIxNzU3IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3Q1MiIsIm5iZiI6MTczOTIyMzQ0NSwiY3NyZiI6ImMyYzkyMjk4LThjOTUtNDEyMy05ZTgyLWRmM2I2NzBiYzY3MyIsImV4cCI6MTczOTMwOTg0NSwicm9sZV9pZCI6NSwiaWQiOjEwfQ.y0Zj7xBpO2YjoI4M-BzBYKB6hvHcYLstdzqolG-m_eg
 
 ###
-POST http://127.0.0.1:8000/set_kanban
+GET http://127.0.0.1:8000/kanban/
+Accept: application/application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczOTIwMDcwMiwianRpIjoiOGZiZTQ0MzctNTlhNS00NmIzLWEzMzUtNDJiY2RlZWRlODI5IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QyIiwibmJmIjoxNzM5MjAwNzAyLCJjc3JmIjoiNjJjNWFhNGItYmE4NC00MzRjLThjODEtMzViYzJmNTRjZmE1IiwiZXhwIjoxNzM5Mjg3MTAyLCJyb2xlX2lkIjoyLCJpZCI6N30.Q0CIXSbKFBMU5GuwKQwJJveulDNxfscvJ6NM4QUI-yI
+
+###
+POST http://127.0.0.1:8000/kanban/
 Accept: application/application/json
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczNzQwMzM2MywianRpIjoiOWViODU0MWYtNTJkMy00Y2RmLTliNGUtMmM5YmM5ZTI4MjFjIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QyIiwibmJmIjoxNzM3NDAzMzYzLCJjc3JmIjoiMzQ5Zjc3NGEtYmNiNS00MjQ5LWEzNWUtYjE5ZGNlZjY4YjU0IiwiZXhwIjoxNzM3NDg5NzYzLCJyb2xlX2lkIjoyLCJpZCI6N30.PKOvUU-KDECFbnjmKtozdAO3HITNTn8Xf_xcTtKGrP8
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczOTIwMDcwMiwianRpIjoiOGZiZTQ0MzctNTlhNS00NmIzLWEzMzUtNDJiY2RlZWRlODI5IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QyIiwibmJmIjoxNzM5MjAwNzAyLCJjc3JmIjoiNjJjNWFhNGItYmE4NC00MzRjLThjODEtMzViYzJmNTRjZmE1IiwiZXhwIjoxNzM5Mjg3MTAyLCJyb2xlX2lkIjoyLCJpZCI6N30.Q0CIXSbKFBMU5GuwKQwJJveulDNxfscvJ6NM4QUI-yI
 
 [
-{
-  "COLUMNID": 1,
-  "CONTENT": "Попробовать"
-},
-{
-  "COLUMNID": 2,
-  "CONTENT": "Делать"
-}
+    {
+    "ID": 165,
+    "COLUMN": "Выполнена",
+    "COLUMNID": 3,
+    "CONTENT": "Делать"
+  },
+  {
+    "ID": 166,
+    "COLUMN": "Сделать",
+    "COLUMNID": 1,
+    "CONTENT": "Приготовит"
+  }
 ]
 
 ###
-POST http://127.0.0.1:8000/create_checklist
+POST http://127.0.0.1:8000/checklist/create
 Accept: application/application/json
 Content-Type: application/json
 
@@ -307,12 +308,11 @@ Content-Type: application/json
 }
 
 ###
-GET http://127.0.0.1:8000/get_checklist
+GET http://127.0.0.1:8000/checklist/get
 Accept: application/application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczOTE4MzE2NCwianRpIjoiZTI4M2E0M2EtZDJiOC00NzVmLWI0NGQtYTc3YzQ1MmQzZjliIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3Q1IiwibmJmIjoxNzM5MTgzMTY0LCJjc3JmIjoiYWJmOGY3ODQtNDViYS00N2Q4LTk5ZWQtOTA4Zjk0MzM5OWRkIiwiZXhwIjoxNzM5MjY5NTY0LCJyb2xlX2lkIjo1LCJpZCI6NX0.EN0Uu8TuRysih4CxeafQywq0oUGBpY_GoZgQ7QtmmLs
-
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczOTIyNzcxNiwianRpIjoiMDkzMmNjNDUtMTFlYi00MDdiLWJkOWEtZGUyNmU2OGQwN2E5IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3Q1MiIsIm5iZiI6MTczOTIyNzcxNiwiY3NyZiI6IjFmODk1YmJlLTQ3N2EtNDE5MC04MGQyLWU4MDE1NmNlZmNkZSIsImV4cCI6MTczOTMxNDExNiwicm9sZV9pZCI6NSwiaWQiOjEwfQ.yECx9hgEhnkrYHakGzOlLIx1t_cnzj_VF_W9YWt8Tng
 
 ###
-DELETE http://127.0.0.1:8000/delete_checklist?id=16
+DELETE http://127.0.0.1:8000/checklist/delete?id=32
 Accept: application/application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczOTE4MzE2NCwianRpIjoiZTI4M2E0M2EtZDJiOC00NzVmLWI0NGQtYTc3YzQ1MmQzZjliIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3Q1IiwibmJmIjoxNzM5MTgzMTY0LCJjc3JmIjoiYWJmOGY3ODQtNDViYS00N2Q4LTk5ZWQtOTA4Zjk0MzM5OWRkIiwiZXhwIjoxNzM5MjY5NTY0LCJyb2xlX2lkIjo1LCJpZCI6NX0.EN0Uu8TuRysih4CxeafQywq0oUGBpY_GoZgQ7QtmmLs
