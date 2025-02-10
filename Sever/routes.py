@@ -491,7 +491,7 @@ def aggregate_description_data():
                 details_by_memo[key] = []
             details_by_memo[key].append({
                 "ID": row.id,
-                "MEMO_ID": row.memo_id,
+                "MEMO_ID": fill_zeros(row.memo_id),
                 "COUNT": row.count
             })
 
@@ -716,23 +716,28 @@ def get_checklist():
             Description.name,
             Description.memo_id,
             Description.count,
+            StatusOfPurchase.name,
+            Description.contract_type,
             Units.short_name,
             Units.full_name
         ).join(Checklist, Checklist.id == ChecklistData.checklist_id
         ).join(Description, Description.id == ChecklistData.description_id
         ).join(Units, Units.id == Description.unit_id
+        ).join(StatusOfPurchase, StatusOfPurchase.id == Description.status_id
         ).filter(Description.id_of_executor == user_id).all()
 
         # Группируем данные по CHECKLIST_ID
         checklist_data = {}
-        for checklist_id, description_id, description_name, memo_id, count, unit_short_name, unit_full_name in query_result:
+        checklist_info = {}
+        for checklist_id, description_id, description_name, memo_id, count, status_name, contract_type, unit_short_name, unit_full_name in query_result:
             if checklist_id not in checklist_data:
                 checklist_data[checklist_id] = []
+                checklist_info[checklist_id] = {"STATUS": status_name, "CONTRACT_TYPE": contract_type}
             
             checklist_data[checklist_id].append({
                 "ID": description_id,
                 "NAME": description_name,
-                "MEMO_ID": memo_id,
+                "MEMO_ID": fill_zeros(memo_id),
                 "COUNT": count,
                 "UNIT_SHORT_NAME": unit_short_name,
                 "UNIT_FULL_NAME": unit_full_name,
@@ -740,7 +745,12 @@ def get_checklist():
 
         # Формируем список всех чек-листов
         response = [
-            {"CHECKLIST_ID": cl_id, "VALUES": values}
+            {
+                "CHECKLIST_ID": cl_id,
+                "STATUS": checklist_info[cl_id]["STATUS"],
+                "CONTRACT_TYPE": ConstantSOP.CONTRACT_TYPE_REVERSE[checklist_info[cl_id]["CONTRACT_TYPE"]],
+                "VALUES": values
+            }
             for cl_id, values in checklist_data.items()
         ]
 
@@ -749,6 +759,7 @@ def get_checklist():
 
     except Exception as ex:
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500
+
 
 
 

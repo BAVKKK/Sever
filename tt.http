@@ -221,7 +221,7 @@ Accept: application/json
 Content-Type: application/json
 
 {
-  "LOGIN": "test52",
+  "LOGIN": "test51",
   "PASSWORD": "abcd1234"
 }
 
@@ -272,7 +272,7 @@ Accept: application/application/json
 ###
 GET http://127.0.0.1:8000/get_aggregate
 Accept: application/application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczODkxNzU3NiwianRpIjoiMzQ3Nzk3YTgtNjUzYS00M2E0LTkxODYtZjFmZGIyZTc3Zjc0IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3QyIiwibmJmIjoxNzM4OTE3NTc2LCJjc3JmIjoiNGQwZTU5YzktYjU1ZS00Y2YzLWJlNzgtZTBhNTM1NzNkZGE1IiwiZXhwIjoxNzM5MDAzOTc2LCJyb2xlX2lkIjoyLCJpZCI6N30.CTWsPfxXlSDbEWAz4sjqj8WrunkPP7lliJka4QbZ79Q
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczOTA5NDk0MCwianRpIjoiY2FjNmU5MjAtZDBiZC00ODZiLThjMTUtNmVlMzY3NjY1YWNkIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6InRlc3Q1MiIsIm5iZiI6MTczOTA5NDk0MCwiY3NyZiI6IjVlYjZhNDBmLTZjMmItNGIxNC1iNTc2LTI3Yzc1N2NhY2FiMSIsImV4cCI6MTczOTE4MTM0MCwicm9sZV9pZCI6NSwiaWQiOjEwfQ.I2p6Z2PAijZxaOkCSOP6dqwhY2C-El7Sfa02LILjNYk
 
 ###
 GET http://127.0.0.1:8000/get_kanban

@@ -28,6 +28,10 @@ class ConstantSOP():
         "Contract": 1,
         "Invoice-contract": 2
     }
+    CONTRACT_TYPE_REVERSE = {
+        1: "Договор",
+        2: "Счет-договор"
+    }
     CONTRACT_RULES = {
         CONTRACT_TYPE["Contract"]: [REQUEST_TKP, REQUEST_PROCUREMENT, APPROVAL, PLACEMENT_OF_PROCUREMENT, SUMMING_UP, CONTRACT_CONCLUDED, IN_WAREHOUSE],
         CONTRACT_TYPE["Invoice-contract"]: [REQUEST_TKP, REQUEST_PROCUREMENT, PAYMENT, IN_WAREHOUSE]

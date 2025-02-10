@@ -10,14 +10,7 @@ def from_b64str_to_minio(mime_types: dict,
                          minio_id: str,
                          bucket_name: str):
     """
-    Запись файла из base64 строки в minio
-
-    params:
-    mime_types: необходимые mimetype,
-    data: файл в формате строки в base64,
-    ext: расширение файла
-    minio_id: путь до minio
-    bucket_name: имя bucket в minio
+    Запись файла из base64 строки в minio без сохранения локально
     """
     try:
         extension = mime_types[ext]
@@ -25,20 +18,17 @@ def from_b64str_to_minio(mime_types: dict,
             file_content = data.split('base64,')[1]
         else:
             file_content = data
-        value_as_bytes = file_content.encode('utf-8')
-        with open(f'decoded{extension}', 'wb') as file_to_save:
-            decoded_data = base64.decodebytes(value_as_bytes)
-            file_to_save.write(decoded_data)
-        with open(f'decoded{extension}', 'rb') as f:
-            value_as_bytes = f.read()
-        value_as_a_stream = io.BytesIO(value_as_bytes)
-        minio_lib.client.put_object(bucket_name=minio_lib.initialize_minio(bucket_name),
-                                    object_name=minio_id,
-                                    data=value_as_a_stream,
-                                    length=len(value_as_bytes),
-                                    )
+
+        decoded_data = base64.b64decode(file_content)  # Декодируем base64 сразу в bytes
+        value_as_a_stream = io.BytesIO(decoded_data)   # Создаём поток для передачи
+
+        minio_lib.client.put_object(
+            bucket_name=minio_lib.initialize_minio(bucket_name),
+            object_name=minio_id,
+            data=value_as_a_stream,
+            length=len(decoded_data),
+        )
     except Exception as ex:
-        print(ex)
         return 0
     return 1
 

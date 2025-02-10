@@ -1,8 +1,10 @@
 # Sever
 Создано 03.02.2025
+Последнее изменение 10.02.2025
 ## Навигация
 - [Краткое описание](#краткое-описание)
 - [Техническая реализация](#техническая-реализация)
+- [Файлы конфигурации системы](#файлы-конфигурации-системы)
 - [Структура базы данных](#структура-базы-данных)
 - [Описание разработанных методов](#описание-разработанных-методов)
 
@@ -12,13 +14,97 @@
 ## Техническая реализация
 <ul>
     <li> <b>Язык программирования</b>: Python 3.8.10;
-    <li> <b>Веб-фреймворк</b>: Flask;
+    <li> <b>Веб-фреймворк</b>: Flask 3.0.3;
+    <li> <b>WSGI-сервер</b>: uWSGI 2.0.27;
     <li> <b>Веб-сервер: Nginx</b> 1.18.0;
     <li> <b>Операционная система</b>: Ubuntu-server 20.04;
     <li> <b>СУБД</b>: PostgreSQL 12.22;
     <li> <b>Файловый сервер</b>: MinIO v2024-12-18;
     <li> <b>Графический интерфейс БД</b>: PgAdmin4;
 </ul>
+
+## Файлы конфигурации системы
+
+### Nginx
+<p>
+Настройка проксирования через веб-сервер Nginx осуществляется внесением изменения в файл конфигурации nginx.
+</p>
+<details>
+<summary><b>uWSGI:</b></summary>
+
+```nginx
+# Конфигурационный файл: /etc/nginx/uwsgi_params
+uwsgi_param  QUERY_STRING       $query_string;
+uwsgi_param  REQUEST_METHOD     $request_method;
+uwsgi_param  CONTENT_TYPE       $content_type;
+uwsgi_param  CONTENT_LENGTH     $content_length;
+
+uwsgi_param  REQUEST_URI        $request_uri;
+uwsgi_param  PATH_INFO          $document_uri;
+uwsgi_param  DOCUMENT_ROOT      $document_root;
+uwsgi_param  SERVER_PROTOCOL    $server_protocol;
+uwsgi_param  REQUEST_SCHEME     $scheme;
+uwsgi_param  HTTPS              $https if_not_empty;
+
+uwsgi_param  REMOTE_ADDR        $remote_addr;
+uwsgi_param  REMOTE_PORT        $remote_port;
+uwsgi_param  SERVER_PORT        $server_port;
+uwsgi_param  SERVER_NAME        $server_name;
+```
+</details>
+
+<details>
+<summary><b>Sever:</b></summary>
+
+```nginx
+# Конфигурационный файл: /etc/nginx/sites-available/Sever
+server {
+    listen 8880;
+
+    location / {
+        include uwsgi_params;
+        uwsgi_pass unix:/home/svyat/Sever/Sever.sock;
+    }
+}
+```
+</details>
+
+
+### Сервисный файл
+<p>
+Юнит-файлы в systemd — это конфигурационные файлы, которые описывают, как запускать и управлять системными сервисами и процессами в Linux.
+</p>
+<details>
+<summary><b>Unit-файл:</b></summary>
+
+```ini
+# Конфигурационный файл: /etc/systemd/system/Sever.service
+[Unit]
+Description=uWSGI instance to serve Sever app
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/home/svyat/Sever
+ExecStart=/home/svyat/Sever/venv/bin/uwsgi --ini /home/svyat/Sever/Sever.ini
+
+[Install]
+WantedBy=multi-user.target
+```
+</details>
+
+<details>
+<summary><b>Команды для работы с сервисной службой:</b></summary>
+<ul>
+    <li> <b>Перезапуск системной службы:</b> <code class="language-bash">sudo systemctl daemon-reload</code>
+    <li> <b>Установка автозапуска:</b> <code class="language-bash">sudo systemctl enable Sever</code>
+    <li> <b>Статус:</b> <code class="language-bash">sudo systemctl status Sever</code>
+    <li> <b>Запуск:</b> <code class="language-bash">sudo systemctl start Sever</code>
+    <li> <b>Перезапуск:</b> <code class="language-bash">sudo systemctl restart Sever</code>
+    <li> <b>Остановка:</b> <code class="language-bash">sudo systemctl stop Sever</code>
+</ul>
+</details>
 
 ## Структура базы данных
 <p> База данных состоит из множества связанных друг с другом таблиц и приведена к третьей нормальной форме. 
