@@ -86,14 +86,14 @@ class HistoryOfchangingSOP(db.Model):
     description_id = db.Column(db.Integer, db.ForeignKey('description.id'), nullable=True)
     setted_status_id = db.Column(db.Integer, db.ForeignKey('status_of_purchase.id'), nullable=True)
 
-class Contract(db.Model):
-    __tablename__ = 'contract'
-    id = db.Column(db.Integer, primary_key=True)
-    memo_id = db.Column(db.Integer, db.ForeignKey('memo.id'), nullable=True)
-    contract_name = db.Column(db.String, nullable=True)
-    payment_name = db.Column(db.String, nullable=True)
-    contract_ext = db.Column(db.String(32), nullable=True)
-    payment_ext = db.Column(db.String(32), nullable=True)
+# class Contract(db.Model):
+#     __tablename__ = 'contract'
+#     id = db.Column(db.Integer, primary_key=True)
+#     checklist_id = db.Column(db.Integer, db.ForeignKey('checklist.id'), nullable=True)
+#     contract_name = db.Column(db.String, nullable=True)
+#     payment_name = db.Column(db.String, nullable=True)
+#     contract_ext = db.Column(db.String(32), nullable=True)
+#     payment_ext = db.Column(db.String(32), nullable=True)
 
 class KanbanColumn(db.Model):
     __tablename__ = 'kanban_column'
@@ -113,6 +113,10 @@ class Checklist(db.Model):
     __tablename__ = 'checklist'
     id = db.Column(db.Integer, primary_key=True)
     date_of_creation = db.Column(db.DateTime, nullable=True)
+    contract_name = db.Column(db.String, nullable=True)
+    payment_name = db.Column(db.String, nullable=True)
+    contract_ext = db.Column(db.String(32), nullable=True)
+    payment_ext = db.Column(db.String(32), nullable=True)
 
 class ChecklistData(db.Model):
     __tablename__ = 'checklist_data'

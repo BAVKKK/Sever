@@ -51,7 +51,7 @@ def from_minio_to_b64str(minio_id: str,
         return None
     return data
 
-def save_file(memo_id, data, folder):
+def save_file(data, folder, memo_id=None, checklist_id=None):
     """
     Запись файла в минио.
     folder: "contracts", "payments", "justifications"
@@ -64,14 +64,24 @@ def save_file(memo_id, data, folder):
             'image/png': '.png',
             'application/x-zip-compressed': '.zip'
             }
-        
+    id = None
+    if memo_id and memo_id != 0:
+        id = memo_id
+    elif checklist_id and checklist_id != 0:
+        id = checklist_id
+    else:
+        raise ValueError("Memo_id or Checklist_if not setted")
     try:         
-        minio_id = f"{memo_id}/{folder}/{data['NAME']}{mime_types[data['EXT']]}"
+        minio_id = f"{folder}/{id}/{data['NAME']}{mime_types[data['EXT']]}"
         from_b64str_to_minio(mime_types=mime_types,
                             data=data['DATA'],
                             ext=data['EXT'],
                             minio_id=minio_id,
                             bucket_name='sever')
-        return jsonify({"STATUS": "Ok", "ID": str(memo_id)}), 200
+        return jsonify({"STATUS": "Ok", "ID": str(id)}), 200
+    
+    except ValueError as ex:
+        raise ValueError(f"{ex}")
+
     except Exception as ex:
-        return jsonify({"STATUS": "Error", "message": str(ex)}), 500
+       raise RuntimeError(f"{ex}")

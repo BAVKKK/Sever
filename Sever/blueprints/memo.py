@@ -11,6 +11,7 @@ from Sever.models import Memo
 memo_bp = Blueprint('memo', __name__, url_prefix='/memo')
 
 @memo_bp.route('/form', methods=['GET', 'POST'])
+@jwt_required()
 def form():
     """
     Метод для записи служебной записки в БД (POST)
@@ -33,7 +34,7 @@ def form():
     except Exception as ex:
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500
 
-@memo_bp.route('/accept', methods=['GET'])
+@memo_bp.route('/accept', methods=['POST'])
 @jwt_required()
 def accept():
     """
@@ -45,29 +46,35 @@ def accept():
         claims = get_jwt()  # Получаем дополнительные данные из токена
         role_id = claims.get("role_id")
 
+        json_data = request.get_json()
+
         if role_id == ConstantRolesID.DEPARTMENT_CHEF_ID:
             memo_id = request.args.get("id")
             status = request.args.get("accept")
 
             if memo_id is not None:
-                memo_id == remove_leading_zeros(memo_id)
+                memo_id = remove_leading_zeros(memo_id)
             else:
                 return jsonify({"msg": "memo id is missing"}), 400
 
             memo = Memo.query.filter_by(id = memo_id).first()
-            memo.status_id = ConstantSOE.REGISTERED if status else ConstantSOE.DECLINE_BY_DEP_CHEF # Зарегистрировна, Отклонена нач. отдела
+            memo.status_id = ConstantSOE.REGISTERED if int(status) else ConstantSOE.DECLINE_BY_DEP_CHEF # Зарегистрировна, Отклонена нач. отдела
+            
+            memo.head_comment = json_data.get("COMMENT","")
             add_commit(memo)
         elif role_id == ConstantRolesID.MTO_CHEF_ID:
             memo_id = request.args.get("id")
             status = request.args.get("accept")
 
             if memo_id is not None:
-                memo_id == remove_leading_zeros(memo_id)
+                memo_id = remove_leading_zeros(memo_id)
             else:
                 return jsonify({"msg": "memo id is missing"}), 400
 
             memo = Memo.query.filter_by(id = memo_id).first()
-            memo.status_id = ConstantSOE.EXECUTION if status else ConstantSOE.DECLINE_BY_MTO_CHEF # Исполнение, Отклонена отделом закупок
+            memo.status_id = ConstantSOE.EXECUTION if int(status) else ConstantSOE.DECLINE_BY_MTO_CHEF # Исполнение, Отклонена отделом закупок
+
+            memo.executor_comment = json_data.get("COMMENT","")
             add_commit(memo)
         else:
             return jsonify({"msg": "Unauthorized role"}), 403
@@ -78,6 +85,7 @@ def accept():
         return jsonify({"STATUS": "Error", "message": str(ex)}), 500
 
 @memo_bp.route('/count', methods=['GET'])
+@jwt_required()
 def count():
     """
     Метод для подсчета служебных записок по фильтрам.

@@ -6,7 +6,6 @@ from datetime import timedelta
 from Sever.utils import log_request, add_commit
 from Sever.models import Users
 
-@log_request
 def login(login, password):
     try: 
         user = Users.query.filter_by(login=login).first()  # Проверка пользователя
@@ -26,10 +25,8 @@ def login(login, password):
         else:
             raise ValueError("Invalid login or password")
     except ValueError as ex:
-        current_app.logger.warning(f"Login failed: {ex}")
         return jsonify({"STATUS": "Error", "message": str(ex)}), 401
     except Exception as ex:
-        current_app.logger.critical(f"Unknown error in login: {ex}")
         raise RuntimeError(f"Error during login: {ex}")
 
 @log_request

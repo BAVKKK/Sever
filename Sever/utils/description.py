@@ -1,16 +1,18 @@
 from flask import current_app, request, jsonify, Response
 from sqlalchemy import func
+from sqlalchemy.orm import session
+from datetime import datetime as dt
 
 import json
 
 from Sever.utils import log_request, add_commit
-from Sever.db_utils import fill_zeros, create_his
+from Sever.db_utils import fill_zeros
 from Sever.constants import *
 from Sever.models import *
 
 def set_contract_type(contract_type, ids):
-    if not contract_type or not ids:
-        raise ValueError("Invalid input: contract_type or ids are missing or empty.")
+    if not ids:
+        raise ValueError("Invalid input: ids are missing or empty.")
 
     try:
         # Обновляем записи в таблице description
@@ -29,7 +31,8 @@ def set_contract_type(contract_type, ids):
 def next_sop(current_sop, type):
     try:
         if type is None:
-            type = ConstantSOP.CONTRACT_TYPE["Contract"] # По умолчанию установим тип договора как обычный договор
+            return ConstantSOP.REQUEST_TKP
+
         if current_sop == ConstantSOP.NOT_SETTED:
             next_value = ConstantSOP.CONTRACT_RULES[type][0]         
         elif ConstantSOP.CONTRACT_RULES[type].index(current_sop) + 1 < len(ConstantSOP.CONTRACT_RULES[type]):
@@ -39,6 +42,75 @@ def next_sop(current_sop, type):
         return next_value
     except Exception as ex:
         raise ValueError(f"{ex}")
+
+
+def prev_sop(current_sop, type):
+    try:
+        if type is None or current_sop == ConstantSOP.NOT_SETTED:
+            return ConstantSOP.NOT_SETTED
+  
+        if ConstantSOP.CONTRACT_RULES[type].index(current_sop) - 1 > 0:
+            prev_value = ConstantSOP.CONTRACT_RULES[type][ConstantSOP.CONTRACT_RULES[type].index(current_sop) - 1]
+            return prev_value
+        else:
+            return ConstantSOP.NOT_SETTED
+   
+    except Exception as ex:
+        raise ValueError(f"{ex}")
+
+
+def create_his(desc_id, sop_id):
+    """
+    Создаем новую запись в истории изменения статуса закупки
+    """
+    new_his = HistoryOfchangingSOP(
+        date_of_setup = dt.now(),
+        description_id = desc_id,
+        setted_status_id = sop_id
+        )
+    add_commit(new_his)
+    return new_his
+
+
+def drop_sop(descs):
+    """
+    Функция изменяет текущий статус закупки на предыдущий и удаляет запись из истории изменений статуса.
+    """
+    try:
+        # Получаем массив статусов из объектов descs
+        status_ids = [desc.status_id for desc in descs]
+
+        # Проверяем, что все элементы имеют один и тот же статус
+        unique_statuses = set(status_ids)
+        if len(unique_statuses) > 1:
+            raise ValueError("All objects must have one status_id")
+        
+        # Получаем массив ID из объектов descs
+        desc_ids = [desc.id for desc in descs]
+
+        # Удаляем записи из истории изменений статусов
+        HistoryOfchangingSOP.query.filter(
+            HistoryOfchangingSOP.description_id.in_(desc_ids),
+            HistoryOfchangingSOP.setted_status_id.in_(status_ids)
+        ).delete()
+        db.session.commit()
+
+        # Получаем предыдущий статус (по первому объекту, т.к. все статусы одинаковые)
+        prev_status = prev_sop(descs[0].status_id, descs[0].contract_type)
+        ct = descs[0].contract_type
+
+        if prev_status == ConstantSOP.NOT_SETTED:
+            ct = None
+
+        # Обновляем статусы у всех переданных объектов
+        Description.query.filter(Description.id.in_(desc_ids)).update(
+            {Description.status_id: prev_status, Description.contract_type: ct},
+            synchronize_session=False
+        )
+        db.session.commit()
+
+    except Exception as ex:
+        raise RuntimeError(f"Unexpected error in drop_sop: {ex}")
 
 
 def set_sop(ids):

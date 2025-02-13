@@ -15,6 +15,7 @@ def apply_reestr_filters(query, filters):
         if 'DESCRIPTION' in filters:
             filt = filters["DESCRIPTION"]
             query = query.filter(Memo.description.ilike(f"%{filt}%"))
+            print(filt)
         if 'INFO' in filters:
             filt = filters["INFO"]
             query = query.filter(Memo.info.ilike(f"%{filt}%"))
@@ -65,7 +66,7 @@ def valid_gr_params(user_id, role_id):
         raise RuntimeError(f"{ex}")
 
 
-def apply_roles(query, role_id, user_id):
+def apply_roles(query, role_id, user):
     try:
         # Определяем фильтрацию по ролям
         if role_id == ConstantRolesID.DEPARTMENT_CHEF_ID:
@@ -79,11 +80,11 @@ def apply_roles(query, role_id, user_id):
         elif role_id == ConstantRolesID.EMPLOYEE_ID:  # Если пользователь сотрудник
             # Получаем заявки, где user.id в id_creator
             query = query.filter(
-                (Memo.id_of_creator == user_id)
+                (Memo.id_of_creator == user.id)
             )
         elif role_id == ConstantRolesID.MTO_EMPLOYEE_ID:  # Если пользователь сотрудник отдела МТО
             # Получаем только те заявки, где пользователь указан в id_executor
-            query = query.join(Description, Description.memo_id == Memo.id).filter(Description.id_of_executor == user_id)
+            query = query.join(Description, Description.memo_id == Memo.id).filter(Description.id_of_executor == user.id)
         else:
             return jsonify({"msg": "Unauthorized role"}), 403
         
@@ -123,7 +124,7 @@ def get_reestr(user_id, role_id, status=None, filters=None):
         # Определяем базовый запрос
         query = Memo.query
         # Применяем фильтры по ролям
-        query = apply_roles(query=query, role_id=role_id, user_id=user_id)
+        query = apply_roles(query=query, role_id=role_id, user=user)
         # Применяем фильтры по статусам
         query = apply_status(query=query, role_id=role_id, status=status)
 
@@ -131,6 +132,7 @@ def get_reestr(user_id, role_id, status=None, filters=None):
         if filters:
             query = apply_reestr_filters(query=query, filters=filters)
 
+        print(query)
         # Выполняем запрос
         memos = query.all()
         
