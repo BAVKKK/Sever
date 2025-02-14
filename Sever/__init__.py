@@ -1,13 +1,14 @@
-from flask import Flask, session, current_app, request
+from flask import Flask
 from flask_cors import CORS
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
-from flask_jwt_extended import JWTManager
-import functools
+
 import datetime
 import logging
 
+from Sever.configs.flask import SECRET_KEY, JWT_SECRET_KEY, SQLALCHEMY_DATABASE_URI
+from Sever.extensions import db, manager, jwt
 
+from Sever.blueprints import register_blueprints
+    
 def configure_logging(app):
     # Настройки логирования приложения
     app.logger.setLevel(logging.INFO)
@@ -21,34 +22,23 @@ def configure_logging(app):
     file_handler.setFormatter(formatter)
     app.logger.addHandler(file_handler)
 
-def log_request(func):
-    """
-    Декоратор для логирования
-    """
-    @functools.wraps(func)
-    def decorated_function(*args, **kwargs):
-        current_app.logger.info('Request: %s %s', request.method, request.url)
-        return func(*args, **kwargs)
-    return decorated_function
+def create_app():
+    app = Flask(__name__)
+    app.secret_key = SECRET_KEY
+    app.config['JWT_SECRET_KEY'] = JWT_SECRET_KEY
+    app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['JSON_AS_ASCII'] = False  # Отключает ASCII-кодирование
+    app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True  # Делает вывод более читабельным
+    app.permanent_session_lifetime = datetime.timedelta(days=1)
+    CORS(app, supports_credentials=True)
+    
+    db.init_app(app)
+    manager.init_app(app)
+    jwt.init_app(app)
 
-app = Flask(__name__)
-app.secret_key = '+91yyrL/v/+P45IPhHl7ACgQfD24enrXij0uUJRVucU='
-app.config['JWT_SECRET_KEY'] = '654531c5ee6550c5bd6947b75bb25e4efe10d947a8d9520f1fa02ea7133fffd2'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://dba:24082001@localhost/sever'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['JSON_AS_ASCII'] = False  # Отключает ASCII-кодирование
-app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True  # Делает вывод более читабельным
-app.permanent_session_lifetime = datetime.timedelta(days=1)
-CORS(app, supports_credentials=True)
-db = SQLAlchemy(app)
-manager = LoginManager(app)
-jwt = JWTManager(app)
+    configure_logging(app)
 
-configure_logging(app)
+    register_blueprints(app) 
+    return app
 
-from Sever import models, routes
-
-
-
-
-#db.create_all()

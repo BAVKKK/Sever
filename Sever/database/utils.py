@@ -1,7 +1,7 @@
 from flask import jsonify
 import base64
 import io
-from Sever.db import minio_lib
+from Sever.database import minio_lib
 
 
 def from_b64str_to_minio(mime_types: dict,
@@ -10,14 +10,7 @@ def from_b64str_to_minio(mime_types: dict,
                          minio_id: str,
                          bucket_name: str):
     """
-    Запись файла из base64 строки в minio
-
-    params:
-    mime_types: необходимые mimetype,
-    data: файл в формате строки в base64,
-    ext: расширение файла
-    minio_id: путь до minio
-    bucket_name: имя bucket в minio
+    Запись файла из base64 строки в minio без сохранения локально
     """
     try:
         extension = mime_types[ext]
@@ -25,20 +18,17 @@ def from_b64str_to_minio(mime_types: dict,
             file_content = data.split('base64,')[1]
         else:
             file_content = data
-        value_as_bytes = file_content.encode('utf-8')
-        with open(f'decoded{extension}', 'wb') as file_to_save:
-            decoded_data = base64.decodebytes(value_as_bytes)
-            file_to_save.write(decoded_data)
-        with open(f'decoded{extension}', 'rb') as f:
-            value_as_bytes = f.read()
-        value_as_a_stream = io.BytesIO(value_as_bytes)
-        minio_lib.client.put_object(bucket_name=minio_lib.initialize_minio(bucket_name),
-                                    object_name=minio_id,
-                                    data=value_as_a_stream,
-                                    length=len(value_as_bytes),
-                                    )
+
+        decoded_data = base64.b64decode(file_content)  # Декодируем base64 сразу в bytes
+        value_as_a_stream = io.BytesIO(decoded_data)   # Создаём поток для передачи
+
+        minio_lib.client.put_object(
+            bucket_name=minio_lib.initialize_minio(bucket_name),
+            object_name=minio_id,
+            data=value_as_a_stream,
+            length=len(decoded_data),
+        )
     except Exception as ex:
-        print(ex)
         return 0
     return 1
 
@@ -61,7 +51,7 @@ def from_minio_to_b64str(minio_id: str,
         return None
     return data
 
-def save_file(memo_id, data, folder):
+def save_file(data, folder, memo_id=None, checklist_id=None):
     """
     Запись файла в минио.
     folder: "contracts", "payments", "justifications"
@@ -74,14 +64,24 @@ def save_file(memo_id, data, folder):
             'image/png': '.png',
             'application/x-zip-compressed': '.zip'
             }
-        
+    id = None
+    if memo_id and memo_id != 0:
+        id = memo_id
+    elif checklist_id and checklist_id != 0:
+        id = checklist_id
+    else:
+        raise ValueError("Memo_id or Checklist_if not setted")
     try:         
-        minio_id = f"{memo_id}/{folder}/{data['NAME']}{mime_types[data['EXT']]}"
+        minio_id = f"{folder}/{id}/{data['NAME']}{mime_types[data['EXT']]}"
         from_b64str_to_minio(mime_types=mime_types,
                             data=data['DATA'],
                             ext=data['EXT'],
                             minio_id=minio_id,
                             bucket_name='sever')
-        return jsonify({"STATUS": "Ok", "ID": str(memo_id)}), 200
+        return jsonify({"STATUS": "Ok", "ID": str(id)}), 200
+    
+    except ValueError as ex:
+        raise ValueError(f"{ex}")
+
     except Exception as ex:
-        return jsonify({"STATUS": "Error", "message": str(ex)}), 500
+       raise RuntimeError(f"{ex}")
